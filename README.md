@@ -1,2 +1,2 @@
 # MiniTorch
-A lightweight deep learning framework built from scratch in Python, implementing automatic differentiation, tensor operations, and CUDA acceleration. Inspired by PyTorch for educational and systems-level understanding.
+MiniTorch is a PyTorch-style deep learning framework built from scratch in Python to understand and reimplement the core layers of modern ML systems: automatic differentiation, tensor abstractions, optimized CPU kernels, CUDA acceleration, and neural-network training.
