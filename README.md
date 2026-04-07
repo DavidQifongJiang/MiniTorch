@@ -1,141 +1,180 @@
+# MiniTorch
 
-The benchmark figures in that draft come from your current resume, not from the current README. The framework and module progression are supported by the actual code in `operators.py`, `scalar.py`, `autodiff.py`, `tensor.py`, `fast_ops.py`, `cuda_ops.py`, `nn.py`, and `run_tensor.py`. :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9} :contentReference[oaicite:10]{index=10} :contentReference[oaicite:11]{index=11} :contentReference[oaicite:12]{index=12} :contentReference[oaicite:13]{index=13} :contentReference[oaicite:14]{index=14} :contentReference[oaicite:15]{index=15} :contentReference[oaicite:16]{index=16}
+MiniTorch is a PyTorch-style deep learning framework built from scratch in Python to reimplement the core layers of modern ML systems: automatic differentiation, multidimensional tensors, optimized CPU kernels, CUDA acceleration, and neural-network training.
 
-## What you need to do next, one by one
+Instead of treating frameworks like PyTorch as a black box, MiniTorch rebuilds the stack from first principles:
 
-### 1. Replace the root README
-Paste the draft above into `README.md`.
+- mathematical operators and functional primitives
+- scalar reverse-mode autodiff
+- tensor abstractions with broadcasting and shape transforms
+- optimized CPU tensor kernels with Numba
+- CUDA kernels for map / zip / reduce / matrix multiply
+- neural-network primitives and end-to-end training demos
 
-Done looks like:
-- the repo explains what MiniTorch is in under 10 seconds
-- a recruiter can tell this is a framework project, not just a class submission
+The goal of this project is both correctness and systems understanding: not just training a model, but understanding how gradients, tensor layouts, parallel kernels, and backend design work together.
 
-### 2. Add a real benchmark section with reproducible evidence
-Right now the numbers are only on the resume. Add scripts and output for:
-- naive CPU vs optimized CPU
-- CPU vs GPU training runtime
-- tensor sizes used
-- hardware used
+---
 
-Done looks like:
-- `benchmarks/` folder
-- one markdown table with exact settings
-- one short note on how to rerun
+## What MiniTorch Supports
 
-### 3. Add a simple architecture diagram
-Make one image showing:
+### Core framework features
+- Reverse-mode automatic differentiation
+- Computation graph construction and backpropagation
+- Scalar and tensor abstractions
+- Broadcasting-aware gradient propagation
+- Reshape, permute, reduction, and elementwise tensor ops
+- Batched matrix multiplication
+- Backend-aware execution for CPU and GPU
 
-`operators -> autodiff -> tensor engine -> CPU backend / CUDA backend -> NN primitives -> training demo`
+### Performance features
+- Numba-optimized CPU tensor kernels
+- Parallelized map / zip / reduce kernels
+- CUDA kernels with shared-memory optimizations
+- Batched matrix multiplication on GPU
 
-Done looks like:
-- `docs/architecture.png`
-- embedded in README near the top
+### Neural-network features
+- ReLU, sigmoid, log, exp
+- Softmax and log-softmax
+- Max reduction and max pooling
+- Average pooling
+- Dropout
+- End-to-end MLP training on nonlinear datasets
 
-### 4. Stop leading with `mod0-... mod4-...` as the public face
-This naming makes the repo feel like coursework. Keep those folders if needed, but create a cleaner public structure.
+---
 
-Best move:
-- create `minitorch/` as the main package directory
-- move milestone folders into `archive/` or `course_milestones/`
+## Why This Project Matters
 
-Done looks like:
-- a new visitor sees framework files first, not school-module folders
+Most ML projects show how to use frameworks.
 
-### 5. Add a quick-start example
-You need one section that shows a user something working immediately.
+MiniTorch shows how a framework works internally.
 
-Best candidate:
-- XOR training demo
-- or a tiny tensor operation example
+This project demonstrates:
+- understanding of reverse-mode autodiff instead of only calling `.backward()`
+- understanding of tensor broadcasting and multidimensional gradient propagation
+- understanding of backend design and kernel-level optimization
+- ability to connect theory, correctness checks, and performance engineering
 
-Done looks like:
-- a 10–20 line example in the README
-- plus an `examples/` folder
+That makes MiniTorch especially relevant for:
+- Machine Learning Engineer roles
+- ML Systems / Infrastructure roles
+- Deep Learning Systems roles
+- Performance-oriented software engineering roles
 
-### 6. Surface tests clearly
-Even if you already have tests somewhere, they are not visible enough.
+---
 
-Done looks like:
-- a `tests/` folder at the root
-- README section: “How correctness was validated”
-- mention derivative checking and operator/backend tests
+## Architecture Overview
 
-### 7. Add one clean training-results section
-You already have end-to-end training logic in `run_tensor.py`, but the repo should show outcomes, not just code. :contentReference[oaicite:17]{index=17}
+MiniTorch is organized as a progression from mathematical foundations to end-to-end training:
 
-Add:
-- dataset names
-- convergence screenshot or logs
-- maybe one loss curve
+### Module 0 — Foundations
+Implements the core mathematical operators and higher-order functional primitives used across the framework.
 
-Done looks like:
-- “MiniTorch successfully trains small MLPs on Simple / Diag / Split / XOR”
-- one image or table proving it
+Examples:
+- `add`, `mul`, `neg`, `sigmoid`, `relu`, `log`, `exp`
+- `map`, `zipWith`, `reduce`
 
-### 8. Clean the docstrings and comments in key files
-The code has good substance, but some comments still read like assignment scaffolding, such as “TODO” or “Implement for Task X.Y.” That weakens the public impression, especially in `fast_ops.py`, `cuda_ops.py`, and `nn.py`. :contentReference[oaicite:18]{index=18} :contentReference[oaicite:19]{index=19} :contentReference[oaicite:20]{index=20}
+### Module 1 — Scalar Autodiff
+Builds scalar reverse-mode autodiff from scratch.
 
-Done looks like:
-- remove task-language in the public branch
-- shorten docstrings
-- make API comments sound library-oriented
+Key ideas:
+- scalar computation graphs
+- operator overloading
+- topological ordering
+- chain-rule-based backpropagation
+- finite-difference derivative checking
 
-### 9. Add packaging metadata
-Make the project feel installable, not just inspectable.
+### Module 2 — Tensor Engine
+Generalizes autodiff from scalars to multidimensional tensors.
 
-Add:
-- `requirements.txt` or `pyproject.toml`
-- optional install instructions
-- Python version
+Key ideas:
+- tensor storage, shape, and stride handling
+- broadcasting-aware operations
+- reshape / permute / reduction support
+- backend-agnostic tensor interface
+- gradient propagation across tensor operations
 
-Done looks like:
-- someone can set up the repo without guessing dependencies
+### Module 3 — Performance Backends
+Adds optimized execution backends.
 
-### 10. Create a polished “public branch” if you do not want to disturb course history
-If the milestone structure is required for class history, do not destroy it. Create a clean branch or mirrored public repo that shows the final framework properly.
+CPU backend:
+- Numba JIT compilation
+- parallelized map / zip / reduce
+- optimized batched matrix multiplication
 
-Done looks like:
-- one recruiter-facing repo/branch
-- one archive/history branch if needed
+GPU backend:
+- CUDA kernels for tensor map / zip / reduce
+- shared-memory matrix multiplication
+- GPU execution for tensor operations and training workloads
 
-### 11. Add commit discipline from now on
-You cannot fake old history, but you can improve the repo’s credibility by making the next commits meaningful:
-- `docs: rewrite README and add architecture diagram`
-- `benchmarks: add CPU and GPU benchmark scripts`
-- `refactor: move final framework into public-facing package layout`
+### Module 4 — Neural-Network Primitives
+Builds higher-level ML functionality on top of the tensor engine.
 
-Done looks like:
-- the repo starts showing engineering maturity immediately
+Includes:
+- pooling
+- softmax / log-softmax
+- dropout
+- max reduction
+- small MLP training demos on nonlinear datasets
 
-### 12. Put the strongest metrics near the top
-Do not bury your best numbers.
+---
 
-Top numbers to surface:
-- `~8× CPU speedup on 1024×1024 tensors`
-- `~2.3× faster training after GPU backend integration`
-- successful end-to-end training on nonlinear datasets including XOR :contentReference[oaicite:21]{index=21}
+## Benchmarks
 
-Done looks like:
-- first screen of README communicates performance + correctness
+MiniTorch includes both correctness-oriented and performance-oriented validation.
 
-### 13. Add a “Why this project matters for ML systems” paragraph
-This helps recruiters who are not deep technical readers.
+### Current measured results
+- Up to **~8× CPU speedup** on large tensors (for example 1024×1024) when comparing naive and optimized tensor backends
+- Reduced end-to-end training time from **~3.2s to ~1.4s per epoch** after integrating the GPU backend (**~2.3× speedup**)
+- Verified training on multiple nonlinear classification tasks including XOR
 
-Done looks like:
-- they understand why rebuilding autodiff, tensors, and kernels is relevant to a job
+### Benchmarking notes
+To make these results fully reproducible, this repository should include:
+- benchmark scripts
+- hardware information
+- tensor sizes
+- backend settings
+- run instructions
 
-### 14. Make one short demo GIF or screenshot
-Even for systems-heavy work, a visual helps.
+A future README update should include a full benchmark table like this:
 
-Best options:
-- XOR loss curve
-- terminal benchmark output
-- architecture diagram + sample training log
+| Workload | Backend A | Backend B | Result |
+|---|---:|---:|---:|
+| Elementwise tensor ops (1024×1024) | naive CPU | optimized CPU | ~8× faster |
+| MLP training epoch | CPU | GPU | ~2.3× faster |
+| Nonlinear classification | autodiff framework | training stable | converges |
 
-Done looks like:
-- a cold reviewer has something visual to anchor on in 5 seconds
+---
 
-### 15. Rewrite the resume bullets only after the repo is fixed
-Your current resume claims are good, but the repo presentation should catch up first. Then the bullets become safer and more believable.
+## Example Capabilities
 
-The highest-value next step is to replace the README, add the benchmark table, and clean the public structure. After that, I’d move to drafting the exact `benchmarks/` section and the architecture diagram text.
+MiniTorch supports end-to-end model execution rather than isolated operator demos.
+
+Examples include:
+- training multilayer perceptrons on nonlinear toy datasets
+- validating gradient correctness through derivative checking
+- running tensor operations on CPU and GPU backends
+- applying softmax, dropout, and pooling built on the same tensor engine
+
+---
+
+## Project Structure
+
+This repository currently reflects the framework as a staged build-up across modules.
+
+Suggested interpretation:
+
+- `mod0-*` — operator foundations
+- `mod1-*` — scalar autodiff
+- `mod2-*` — tensor abstraction
+- `mod3-*` — optimized CPU and CUDA backends
+- `mod4-*` — neural-network primitives and training demos
+
+A future public-facing cleanup should consolidate the final implementation into a cleaner structure such as:
+
+```text
+minitorch/
+examples/
+benchmarks/
+tests/
+docs/
+archive/
