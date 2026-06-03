@@ -40,10 +40,23 @@ Paste the captured output here before publishing benchmark numbers. Make sure th
 
 | Benchmark | Backend | Input / Config | Runs | Median Time | Notes |
 | --- | --- | --- | ---: | ---: | --- |
-| XOR MLP training | MiniTorch fast CPU | PTS=250, HIDDEN=10, RATE=0.05 | TBD | TBD | Warmed up |
-| XOR MLP training | MiniTorch CUDA | PTS=250, HIDDEN=10, RATE=0.05 | TBD | TBD | Warmed up |
-| XOR MLP training | PyTorch CPU | PTS=250, HIDDEN=10, RATE=0.5 | TBD | TBD | Baseline |
+| XOR MLP training | MiniTorch fast CPU | dataset=xor, points=250, hidden=10, rate=0.05, epochs=25 | 5 | 3.9934s | 1 warmup, median excludes warmup |
+| XOR MLP training | PyTorch CPU | dataset=xor, points=250, hidden=10, rate=0.5, epochs=25 | 5 | 0.0170s | 1 warmup, median excludes warmup |
+| XOR MLP training | MiniTorch CUDA | dataset=xor, points=250, hidden=10, rate=0.05, epochs=25 | N/A | N/A | Not published; CUDA smoke run failed in this Windows/Numba environment |
 | Tensor kernel diagnostics | Numba fast CPU | map/zip/reduce/matmul diagnostics | TBD | TBD | Uses `parallel_check.py` |
+
+## Latest Validated Run
+
+| Field | Value |
+| --- | --- |
+| Date | 2026-06-03 |
+| Git commit | `c24b6d3d5ff207b033d30927451b7f9740969d95` |
+| Git status at capture | clean |
+| Command | `python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor --output-name local_i9_12900h_rtx3070ti_run_2026_06_03` |
+| Detailed Markdown | [`local_i9_12900h_rtx3070ti_run_2026_06_03.md`](local_i9_12900h_rtx3070ti_run_2026_06_03.md) |
+| Raw JSON | [`local_i9_12900h_rtx3070ti_run_2026_06_03.json`](local_i9_12900h_rtx3070ti_run_2026_06_03.json) |
+
+CUDA note: a small smoke run with `--include-cuda` failed with a Windows/Numba access violation. CUDA numbers should not be reported until the CUDA backend is validated in a stable CUDA environment.
 
 ## Commands
 
