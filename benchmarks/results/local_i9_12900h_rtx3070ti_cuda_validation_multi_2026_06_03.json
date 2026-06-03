@@ -1,0 +1,189 @@
+{
+  "environment": {
+    "captured_at_utc": "2026-06-03T17:15:34.372202+00:00",
+    "git_commit": "022831a940ecbf626090b26f995a8b0d5adf9da8",
+    "git_status": null,
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:36:00) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "packages": {
+      "minitorch": "installed",
+      "numpy": "2.4.6",
+      "numba": "0.65.1",
+      "torch": "2.12.0+cpu"
+    },
+    "cuda_health": {
+      "numba_cuda_available": true,
+      "runtime_healthy": true,
+      "device_name": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+      "probe_result": 2.0,
+      "error": null
+    },
+    "nvidia_smi": "Wed Jun  3 13:15:34 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 581.80                 Driver Version: 581.80         CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3070 ...  WDDM  |   00000000:01:00.0 Off |                  N/A |\n| N/A   47C    P8             18W /  150W |     359MiB /   8192MiB |     14%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A            2440    C+G   ...__2p2nqsd0c76g0\\app\\Codex.exe      N/A      |\n|    0   N/A  N/A           10208      C   ...nvs\\minitorch-cuda\\python.exe      N/A      |\n|    0   N/A  N/A           28084    C+G   ...grams\\LM Studio\\LM Studio.exe      N/A      |\n|    0   N/A  N/A           30012      C   ...grams\\LM Studio\\LM Studio.exe      N/A      |\n+-----------------------------------------------------------------------------------------+"
+  },
+  "results": [
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=simple, points=100, hidden=10, rate=0.05, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 0.28817909999997937,
+      "mean_seconds": 0.2887172333333486,
+      "min_seconds": 0.28688089999968724,
+      "max_seconds": 0.2910917000003792,
+      "raw_seconds": [
+        0.2910917000003792,
+        0.28817909999997937,
+        0.28688089999968724
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch CUDA",
+      "config": "dataset=simple, points=100, hidden=10, rate=0.05, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 6.0519530999999915,
+      "mean_seconds": 6.043300399999983,
+      "min_seconds": 5.989461099999971,
+      "max_seconds": 6.088486999999986,
+      "raw_seconds": [
+        6.088486999999986,
+        5.989461099999971,
+        6.0519530999999915
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=simple, points=100, hidden=10, rate=0.5, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 0.017386900000019523,
+      "mean_seconds": 0.017536833333300212,
+      "min_seconds": 0.016533200000139914,
+      "max_seconds": 0.018690399999741203,
+      "raw_seconds": [
+        0.018690399999741203,
+        0.016533200000139914,
+        0.017386900000019523
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=split, points=100, hidden=10, rate=0.05, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 0.2911119999998846,
+      "mean_seconds": 0.2908496000000014,
+      "min_seconds": 0.2899326000001565,
+      "max_seconds": 0.291504199999963,
+      "raw_seconds": [
+        0.2911119999998846,
+        0.291504199999963,
+        0.2899326000001565
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch CUDA",
+      "config": "dataset=split, points=100, hidden=10, rate=0.05, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 6.010777199999666,
+      "mean_seconds": 6.0051243999998105,
+      "min_seconds": 5.940770400000019,
+      "max_seconds": 6.0638255999997455,
+      "raw_seconds": [
+        6.010777199999666,
+        5.940770400000019,
+        6.0638255999997455
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=split, points=100, hidden=10, rate=0.5, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 0.016626999999971304,
+      "mean_seconds": 0.016223466666663928,
+      "min_seconds": 0.015359300000000076,
+      "max_seconds": 0.016684100000020408,
+      "raw_seconds": [
+        0.015359300000000076,
+        0.016626999999971304,
+        0.016684100000020408
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=xor, points=100, hidden=10, rate=0.05, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 0.28938700000026074,
+      "mean_seconds": 0.2899030666667386,
+      "min_seconds": 0.28910929999983637,
+      "max_seconds": 0.2912129000001187,
+      "raw_seconds": [
+        0.28938700000026074,
+        0.2912129000001187,
+        0.28910929999983637
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch CUDA",
+      "config": "dataset=xor, points=100, hidden=10, rate=0.05, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 5.909840300000269,
+      "mean_seconds": 5.916331733333361,
+      "min_seconds": 5.907833199999914,
+      "max_seconds": 5.9313216999998986,
+      "raw_seconds": [
+        5.907833199999914,
+        5.9313216999998986,
+        5.909840300000269
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=xor, points=100, hidden=10, rate=0.5, epochs=5, batch_size=10",
+      "runs": 3,
+      "warmups": 1,
+      "median_seconds": 0.01601440000013099,
+      "mean_seconds": 0.01669116666653281,
+      "min_seconds": 0.015866899999764428,
+      "max_seconds": 0.018192199999703007,
+      "raw_seconds": [
+        0.015866899999764428,
+        0.01601440000013099,
+        0.018192199999703007
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    }
+  ]
+}

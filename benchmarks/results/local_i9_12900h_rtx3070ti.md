@@ -46,7 +46,7 @@ Paste the captured output here before publishing benchmark numbers. Make sure th
 | MLP training | PyTorch CPU fair mini-batch | dataset=split, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10 | 5 | 0.2040s | 1 warmup, fair mini-batch comparison |
 | MLP training | MiniTorch fast CPU | dataset=xor, points=250, hidden=10, rate=0.05, epochs=25, batch_size=10 | 5 | 3.6415s | 1 warmup, fair mini-batch comparison |
 | MLP training | PyTorch CPU fair mini-batch | dataset=xor, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10 | 5 | 0.1964s | 1 warmup, fair mini-batch comparison |
-| MLP training | MiniTorch CUDA | same multi-dataset config | N/A | N/A | Not published; CUDA smoke run failed in this Windows/Numba environment |
+| MLP training | MiniTorch CUDA | see CUDA validation section | 3 | see below | Validated in dedicated `minitorch-cuda` environment |
 | Tensor kernel diagnostics | Numba fast CPU | map/zip/reduce/matmul diagnostics | TBD | TBD | Uses `parallel_check.py` |
 
 ## Latest Validated Run
@@ -60,7 +60,37 @@ Paste the captured output here before publishing benchmark numbers. Make sure th
 | Detailed Markdown | [`local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.md`](local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.md) |
 | Raw JSON | [`local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.json`](local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.json) |
 
-CUDA note: a small smoke run with `--include-cuda` failed with a Windows/Numba access violation. CUDA numbers should not be reported until the CUDA backend is validated in a stable CUDA environment.
+## Latest CUDA Validation Run
+
+CUDA validation uses a dedicated conda environment instead of base Anaconda:
+
+```powershell
+conda activate minitorch-cuda
+python benchmarks/cuda_health.py --markdown
+python benchmarks/run_all.py --include-cuda --runs 3 --warmups 1 --epochs 5 --points 100 --hidden 10 --batch-size 10 --datasets simple split xor --output-name local_i9_12900h_rtx3070ti_cuda_validation_multi_2026_06_03
+```
+
+| Field | Value |
+| --- | --- |
+| Date | 2026-06-03 |
+| Git commit | `022831a940ecbf626090b26f995a8b0d5adf9da8` |
+| Git status at capture | clean |
+| Python | `3.11.15` |
+| Numba | `0.65.1` with `numba-cuda` |
+| PyTorch | `2.12.0+cpu` |
+| CUDA runtime health | healthy; RTX 3070 Ti detected; probe result `2.0` |
+| Detailed Markdown | [`local_i9_12900h_rtx3070ti_cuda_validation_multi_2026_06_03.md`](local_i9_12900h_rtx3070ti_cuda_validation_multi_2026_06_03.md) |
+| Raw JSON | [`local_i9_12900h_rtx3070ti_cuda_validation_multi_2026_06_03.json`](local_i9_12900h_rtx3070ti_cuda_validation_multi_2026_06_03.json) |
+
+| Dataset | MiniTorch fast CPU median | MiniTorch CUDA median | PyTorch CPU median |
+| --- | ---: | ---: | ---: |
+| simple | 0.2882s | 6.0520s | 0.0174s |
+| split | 0.2911s | 6.0108s | 0.0166s |
+| xor | 0.2894s | 5.9098s | 0.0160s |
+
+CUDA interpretation: the CUDA backend is now functionally validated, but it is slower than MiniTorch fast CPU on this small MLP workload. The result is expected for this implementation because training launches many small kernels and still pays host/device transfer overhead. Report this as a systems-learning result, not a GPU speedup result.
+
+Historical CUDA note: base Anaconda previously failed a CUDA health probe with a Windows/Numba access violation. The dedicated `minitorch-cuda` environment fixes this by using the NVIDIA-maintained Numba CUDA target/bindings.
 
 Superseded note: the earlier `local_i9_12900h_rtx3070ti_run_2026_06_03` result used MiniTorch mini-batches but a PyTorch full-batch baseline. It is retained as raw history but should not be used as the main comparison.
 
