@@ -152,7 +152,7 @@ Benchmark claims should be tied to the standard methodology in
 for the primary development machine is
 [`benchmarks/results/local_i9_12900h_rtx3070ti.md`](benchmarks/results/local_i9_12900h_rtx3070ti.md).
 
-Current measured results from the standard local benchmark environment:
+Current measured CPU/PyTorch results from the standard local benchmark environment:
 
 | Workload | Backend | Config | Median Time |
 | --- | --- | --- | --- |
@@ -163,12 +163,30 @@ Current measured results from the standard local benchmark environment:
 | MLP training | MiniTorch fast CPU | xor, 250 points, hidden=10, batch_size=10, 25 epochs | 3.6415s |
 | MLP training | PyTorch CPU fair mini-batch | xor, 250 points, hidden=10, batch_size=10, 25 epochs | 0.1964s |
 
-MiniTorch CUDA numbers are not currently published. A CUDA smoke run failed in the Windows/Numba environment, so GPU speedups should not be claimed until the CUDA backend is validated in a stable CUDA runtime.
+Latest CUDA validation on the RTX 3070 Ti Laptop GPU:
+
+| Dataset | MiniTorch fast CPU | MiniTorch CUDA | PyTorch CPU |
+| --- | ---: | ---: | ---: |
+| simple | 0.2882s | 6.0520s | 0.0174s |
+| split | 0.2911s | 6.0108s | 0.0166s |
+| xor | 0.2894s | 5.9098s | 0.0160s |
+
+The CUDA backend is functionally validated in a dedicated `minitorch-cuda`
+environment, but it is slower for this small MLP workload. That result is
+expected for this implementation because training launches many small kernels
+and still pays host/device transfer overhead. The benchmark is used to study
+backend behavior, not to claim GPU speedup.
 
 Run backend diagnostics:
 
 ```bash
 python benchmarks/parallel_check.py
+```
+
+Check CUDA runtime health:
+
+```bash
+python benchmarks/cuda_health.py --markdown
 ```
 
 Run the PyTorch comparison trainer:
@@ -181,6 +199,12 @@ Run the standardized benchmark suite:
 
 ```bash
 python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor
+```
+
+Run the CUDA validation benchmark:
+
+```bash
+python benchmarks/run_all.py --include-cuda --runs 3 --warmups 1 --epochs 5 --points 100 --hidden 10 --batch-size 10 --datasets simple split xor
 ```
 
 Benchmark results depend on hardware, Python version, backend availability, tensor size, and warmup behavior. The benchmark numbers above should be treated as project-scale measurements rather than universal claims.
