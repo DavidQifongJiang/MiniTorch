@@ -152,13 +152,18 @@ Benchmark claims should be tied to the standard methodology in
 for the primary development machine is
 [`benchmarks/results/local_i9_12900h_rtx3070ti.md`](benchmarks/results/local_i9_12900h_rtx3070ti.md).
 
-Current measured results from development:
+Current measured results from the standard local benchmark environment:
 
-| Workload | Baseline | Optimized Path | Result |
+| Workload | Backend | Config | Median Time |
 | --- | --- | --- | --- |
-| Elementwise tensor ops on large tensors, e.g. 1024 x 1024 | Naive CPU backend | Numba CPU backend | Up to about 8x faster |
-| MLP training epoch | Earlier CPU path | GPU-enabled backend | About 3.2s to 1.4s per epoch |
-| Nonlinear classification | MiniTorch autodiff engine | MLP training loop | Stable convergence on toy datasets including XOR |
+| MLP training | MiniTorch fast CPU | simple, 250 points, hidden=10, batch_size=10, 25 epochs | 3.6311s |
+| MLP training | PyTorch CPU fair mini-batch | simple, 250 points, hidden=10, batch_size=10, 25 epochs | 0.2016s |
+| MLP training | MiniTorch fast CPU | split, 250 points, hidden=10, batch_size=10, 25 epochs | 3.6641s |
+| MLP training | PyTorch CPU fair mini-batch | split, 250 points, hidden=10, batch_size=10, 25 epochs | 0.2040s |
+| MLP training | MiniTorch fast CPU | xor, 250 points, hidden=10, batch_size=10, 25 epochs | 3.6415s |
+| MLP training | PyTorch CPU fair mini-batch | xor, 250 points, hidden=10, batch_size=10, 25 epochs | 0.1964s |
+
+MiniTorch CUDA numbers are not currently published. A CUDA smoke run failed in the Windows/Numba environment, so GPU speedups should not be claimed until the CUDA backend is validated in a stable CUDA runtime.
 
 Run backend diagnostics:
 

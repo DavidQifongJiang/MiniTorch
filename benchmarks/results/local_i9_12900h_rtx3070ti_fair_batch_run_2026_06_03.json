@@ -1,0 +1,140 @@
+{
+  "environment": {
+    "captured_at_utc": "2026-06-03T03:43:21.575129+00:00",
+    "git_commit": "738f7cccb39a559526c40562df2dc1346c7d99b1",
+    "git_status": null,
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "packages": {
+      "minitorch": "installed",
+      "numpy": "2.0.2",
+      "numba": "0.61.0",
+      "torch": "2.5.1+cu121"
+    },
+    "nvidia_smi": "Tue Jun  2 23:43:23 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 581.80                 Driver Version: 581.80         CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3070 ...  WDDM  |   00000000:01:00.0 Off |                  N/A |\n| N/A   52C    P0             31W /  137W |       0MiB /   8192MiB |      1%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|  No running processes found                                                             |\n+-----------------------------------------------------------------------------------------+"
+  },
+  "results": [
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=simple, points=250, hidden=10, rate=0.05, epochs=25, batch_size=10",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 3.631101299994043,
+      "mean_seconds": 3.646793559999787,
+      "min_seconds": 3.5808116999978665,
+      "max_seconds": 3.7137972000055015,
+      "raw_seconds": [
+        3.67767989999993,
+        3.7137972000055015,
+        3.631101299994043,
+        3.630577700001595,
+        3.5808116999978665
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=simple, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.20159889999922598,
+      "mean_seconds": 0.20269545999908586,
+      "min_seconds": 0.1966833000042243,
+      "max_seconds": 0.2102071999979671,
+      "raw_seconds": [
+        0.20688549999613315,
+        0.2102071999979671,
+        0.20159889999922598,
+        0.1966833000042243,
+        0.19810239999787882
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=split, points=250, hidden=10, rate=0.05, epochs=25, batch_size=10",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 3.664125300005253,
+      "mean_seconds": 3.684106060002523,
+      "min_seconds": 3.5993780000062543,
+      "max_seconds": 3.8297772000005352,
+      "raw_seconds": [
+        3.5993780000062543,
+        3.8297772000005352,
+        3.664125300005253,
+        3.6891056000022218,
+        3.638144199998351
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=split, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.20398389999900246,
+      "mean_seconds": 0.2062186399998609,
+      "min_seconds": 0.19838670000171987,
+      "max_seconds": 0.21675349999713944,
+      "raw_seconds": [
+        0.20398389999900246,
+        0.19838670000171987,
+        0.20329620000120485,
+        0.21675349999713944,
+        0.20867290000023786
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=xor, points=250, hidden=10, rate=0.05, epochs=25, batch_size=10",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 3.641456299999845,
+      "mean_seconds": 3.6651737199994385,
+      "min_seconds": 3.5923922000001767,
+      "max_seconds": 3.7806627999962075,
+      "raw_seconds": [
+        3.685972799998126,
+        3.6253845000028377,
+        3.5923922000001767,
+        3.7806627999962075,
+        3.641456299999845
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=xor, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.19637179999699583,
+      "mean_seconds": 0.197457979999308,
+      "min_seconds": 0.19360109999979613,
+      "max_seconds": 0.20592340000439435,
+      "raw_seconds": [
+        0.19715549999818904,
+        0.19637179999699583,
+        0.19360109999979613,
+        0.19423809999716468,
+        0.20592340000439435
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    }
+  ]
+}

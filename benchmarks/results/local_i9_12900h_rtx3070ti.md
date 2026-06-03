@@ -40,9 +40,13 @@ Paste the captured output here before publishing benchmark numbers. Make sure th
 
 | Benchmark | Backend | Input / Config | Runs | Median Time | Notes |
 | --- | --- | --- | ---: | ---: | --- |
-| XOR MLP training | MiniTorch fast CPU | dataset=xor, points=250, hidden=10, rate=0.05, epochs=25 | 5 | 3.9934s | 1 warmup, median excludes warmup |
-| XOR MLP training | PyTorch CPU | dataset=xor, points=250, hidden=10, rate=0.5, epochs=25 | 5 | 0.0170s | 1 warmup, median excludes warmup |
-| XOR MLP training | MiniTorch CUDA | dataset=xor, points=250, hidden=10, rate=0.05, epochs=25 | N/A | N/A | Not published; CUDA smoke run failed in this Windows/Numba environment |
+| MLP training | MiniTorch fast CPU | dataset=simple, points=250, hidden=10, rate=0.05, epochs=25, batch_size=10 | 5 | 3.6311s | 1 warmup, fair mini-batch comparison |
+| MLP training | PyTorch CPU fair mini-batch | dataset=simple, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10 | 5 | 0.2016s | 1 warmup, fair mini-batch comparison |
+| MLP training | MiniTorch fast CPU | dataset=split, points=250, hidden=10, rate=0.05, epochs=25, batch_size=10 | 5 | 3.6641s | 1 warmup, fair mini-batch comparison |
+| MLP training | PyTorch CPU fair mini-batch | dataset=split, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10 | 5 | 0.2040s | 1 warmup, fair mini-batch comparison |
+| MLP training | MiniTorch fast CPU | dataset=xor, points=250, hidden=10, rate=0.05, epochs=25, batch_size=10 | 5 | 3.6415s | 1 warmup, fair mini-batch comparison |
+| MLP training | PyTorch CPU fair mini-batch | dataset=xor, points=250, hidden=10, rate=0.5, epochs=25, batch_size=10 | 5 | 0.1964s | 1 warmup, fair mini-batch comparison |
+| MLP training | MiniTorch CUDA | same multi-dataset config | N/A | N/A | Not published; CUDA smoke run failed in this Windows/Numba environment |
 | Tensor kernel diagnostics | Numba fast CPU | map/zip/reduce/matmul diagnostics | TBD | TBD | Uses `parallel_check.py` |
 
 ## Latest Validated Run
@@ -50,13 +54,15 @@ Paste the captured output here before publishing benchmark numbers. Make sure th
 | Field | Value |
 | --- | --- |
 | Date | 2026-06-03 |
-| Git commit | `c24b6d3d5ff207b033d30927451b7f9740969d95` |
+| Git commit | `738f7cccb39a559526c40562df2dc1346c7d99b1` |
 | Git status at capture | clean |
-| Command | `python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor --output-name local_i9_12900h_rtx3070ti_run_2026_06_03` |
-| Detailed Markdown | [`local_i9_12900h_rtx3070ti_run_2026_06_03.md`](local_i9_12900h_rtx3070ti_run_2026_06_03.md) |
-| Raw JSON | [`local_i9_12900h_rtx3070ti_run_2026_06_03.json`](local_i9_12900h_rtx3070ti_run_2026_06_03.json) |
+| Command | `python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor --output-name local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03` |
+| Detailed Markdown | [`local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.md`](local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.md) |
+| Raw JSON | [`local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.json`](local_i9_12900h_rtx3070ti_fair_batch_run_2026_06_03.json) |
 
 CUDA note: a small smoke run with `--include-cuda` failed with a Windows/Numba access violation. CUDA numbers should not be reported until the CUDA backend is validated in a stable CUDA environment.
+
+Superseded note: the earlier `local_i9_12900h_rtx3070ti_run_2026_06_03` result used MiniTorch mini-batches but a PyTorch full-batch baseline. It is retained as raw history but should not be used as the main comparison.
 
 ## Commands
 
