@@ -147,6 +147,11 @@ python examples/mnist_cnn_demo.py
 
 MiniTorch includes both correctness-oriented and performance-oriented validation.
 
+Benchmark claims should be tied to the standard methodology in
+[`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md). The local benchmark record
+for the primary development machine is
+[`benchmarks/results/local_i9_12900h_rtx3070ti.md`](benchmarks/results/local_i9_12900h_rtx3070ti.md).
+
 Current measured results from development:
 
 | Workload | Baseline | Optimized Path | Result |
