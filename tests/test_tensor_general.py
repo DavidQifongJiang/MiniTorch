@@ -9,6 +9,7 @@ from hypothesis import given, settings
 from hypothesis.strategies import DataObject, data, integers, lists, permutations
 
 import minitorch
+from benchmarks.cuda_health import cuda_runtime_healthy
 from minitorch import MathTestVariable, Tensor, TensorBackend, grad_check
 
 from tests.strategies import assert_close, small_floats
@@ -28,11 +29,7 @@ def cuda_context_available() -> bool:
     if not numba.cuda.is_available():
         return False
 
-    try:
-        numba.cuda.current_context()
-        return True
-    except Exception:
-        return False
+    return cuda_runtime_healthy()
 
 SimpleBackend = minitorch.TensorBackend(minitorch.SimpleOps)
 FastTensorBackend = minitorch.TensorBackend(minitorch.FastOps)

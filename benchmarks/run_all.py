@@ -15,9 +15,17 @@ if str(REPO_ROOT) not in sys.path:
 
 import minitorch
 
+from benchmarks.cuda_health import cuda_healthcheck
 from benchmarks.capture_environment import collect_environment
 from benchmarks.run_fast_tensor import FastTensorBackend, FastTrain, GPUBackend
-from benchmarks.run_torch import TorchTrain
+
+try:
+    from benchmarks.run_torch import TorchTrain
+except Exception as exc:
+    TorchTrain = None
+    TORCH_IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
+else:
+    TORCH_IMPORT_ERROR = ""
 
 
 DATASETS = {
@@ -183,6 +191,8 @@ def run_training_benchmark(
 
 def run_cuda_benchmark(args, dataset_name: str):
     if GPUBackend is None:
+        health = cuda_healthcheck()
+        reason = health.get("error") or "CUDA runtime health probe failed"
         return summarize(
             name="MLP training",
             backend="MiniTorch CUDA",
@@ -191,7 +201,7 @@ def run_cuda_benchmark(args, dataset_name: str):
             warmups=args.warmups,
             times=[],
             status="skipped",
-            notes="CUDA backend is not available in this Python environment",
+            notes=f"CUDA backend skipped: {reason}",
         )
 
     return run_training_benchmark(
@@ -204,6 +214,37 @@ def run_cuda_benchmark(args, dataset_name: str):
         points=args.points,
         hidden=args.hidden,
         rate=args.rate,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        runs=args.runs,
+        warmups=args.warmups,
+        seed=args.seed,
+    )
+
+
+def run_torch_benchmark(args, dataset_name: str):
+    if TorchTrain is None:
+        return summarize(
+            name="MLP training",
+            backend="PyTorch CPU fair mini-batch",
+            config=training_config(args, dataset_name),
+            runs=args.runs,
+            warmups=args.warmups,
+            times=[],
+            status="skipped",
+            notes=f"PyTorch baseline unavailable: {TORCH_IMPORT_ERROR}",
+        )
+
+    return run_training_benchmark(
+        name="MLP training",
+        backend_label="PyTorch CPU fair mini-batch",
+        trainer_factory=lambda hidden, batch_size: TorchTrain(
+            hidden, batch_size=batch_size
+        ),
+        dataset_name=dataset_name,
+        points=args.points,
+        hidden=args.hidden,
+        rate=args.torch_rate,
         epochs=args.epochs,
         batch_size=args.batch_size,
         runs=args.runs,
@@ -235,6 +276,7 @@ def gpu_discussion(results: list[BenchmarkResult]):
         "## GPU Discussion",
         "",
         "MiniTorch's CUDA backend is implemented with Numba CUDA kernels. GPU numbers are only publishable when the CUDA row completes successfully in the same benchmark environment.",
+        "CUDA availability is checked with a real device-transfer and kernel-launch probe, not only `numba.cuda.is_available()`.",
         "",
     ]
 
@@ -281,6 +323,22 @@ def format_markdown(results: list[BenchmarkResult], environment: dict):
 
     for package, version in environment["packages"].items():
         lines.append(f"- {package}: `{version}`")
+
+    cuda_health = environment.get("cuda_health")
+    if cuda_health:
+        lines.extend(
+            [
+                "",
+                "## CUDA Runtime Health",
+                "",
+                f"- Numba CUDA available: `{cuda_health['numba_cuda_available']}`",
+                f"- Runtime probe healthy: `{cuda_health['runtime_healthy']}`",
+                f"- Device name: `{cuda_health['device_name']}`",
+                f"- Probe result: `{cuda_health['probe_result']}`",
+            ]
+        )
+        if cuda_health["error"]:
+            lines.append(f"- Error: `{cuda_health['error']}`")
 
     lines.extend(
         [
@@ -423,24 +481,7 @@ def main():
         if args.include_cuda:
             results.append(run_cuda_benchmark(args, dataset_name))
 
-        results.append(
-            run_training_benchmark(
-                name="MLP training",
-                backend_label="PyTorch CPU fair mini-batch",
-                trainer_factory=lambda hidden, batch_size: TorchTrain(
-                    hidden, batch_size=batch_size
-                ),
-                dataset_name=dataset_name,
-                points=args.points,
-                hidden=args.hidden,
-                rate=args.torch_rate,
-                epochs=args.epochs,
-                batch_size=args.batch_size,
-                runs=args.runs,
-                warmups=args.warmups,
-                seed=args.seed,
-            )
-        )
+        results.append(run_torch_benchmark(args, dataset_name))
 
     environment = collect_environment()
     markdown_path, json_path = write_outputs(args, results, environment)

@@ -13,6 +13,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from benchmarks.cuda_health import cuda_healthcheck
+
 
 def run_command(command):
     if shutil.which(command[0]) is None:
@@ -57,6 +59,7 @@ def collect_environment():
             "numba": module_version("numba"),
             "torch": module_version("torch"),
         },
+        "cuda_health": cuda_healthcheck(),
         "nvidia_smi": run_command(["nvidia-smi"]),
     }
 
@@ -84,6 +87,17 @@ def print_markdown(environment):
     print()
     for name, version in environment["packages"].items():
         print(f"- {name}: `{version}`")
+    print()
+
+    cuda_health = environment["cuda_health"]
+    print("## CUDA Runtime Health")
+    print()
+    print(f"- Numba CUDA available: `{cuda_health['numba_cuda_available']}`")
+    print(f"- Runtime probe healthy: `{cuda_health['runtime_healthy']}`")
+    print(f"- Device name: `{cuda_health['device_name']}`")
+    print(f"- Probe result: `{cuda_health['probe_result']}`")
+    if cuda_health["error"]:
+        print(f"- Error: `{cuda_health['error']}`")
     print()
 
     if environment["nvidia_smi"]:

@@ -1,15 +1,20 @@
 import random
+import sys
 import time
+from pathlib import Path
 
-import numba
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 import minitorch
 
+from benchmarks.cuda_health import cuda_healthcheck, cuda_runtime_healthy
+
 
 FastTensorBackend = minitorch.TensorBackend(minitorch.FastOps)
-GPUBackend = (
-    minitorch.TensorBackend(minitorch.CudaOps) if numba.cuda.is_available() else None
-)
+CUDA_HEALTH = cuda_healthcheck()
+GPUBackend = minitorch.TensorBackend(minitorch.CudaOps) if cuda_runtime_healthy() else None
 
 
 def default_log_fn(epoch, total_loss, correct, losses, time_elapsed):
@@ -132,7 +137,11 @@ if __name__ == "__main__":
 
     if args.BACKEND == "gpu":
         if GPUBackend is None:
-            raise RuntimeError("CUDA backend requested, but CUDA is not available.")
+            reason = CUDA_HEALTH.get("error") or "CUDA runtime health probe failed"
+            raise RuntimeError(
+                "CUDA backend requested, but CUDA runtime is not healthy: "
+                f"{reason}"
+            )
         backend = GPUBackend
     else:
         backend = FastTensorBackend

@@ -51,6 +51,12 @@ Capture the environment:
 python benchmarks/capture_environment.py --markdown
 ```
 
+Check whether this Python environment can actually launch CUDA kernels:
+
+```powershell
+python benchmarks/cuda_health.py --markdown
+```
+
 Run backend parallel diagnostics:
 
 ```powershell
@@ -106,6 +112,20 @@ MiniTorch CUDA results are optional. If a CUDA row is `failed` or `skipped`, kee
 3. The result file captured a clean git commit.
 4. The same dataset, points, hidden size, epochs, batch size, and warmup policy were used.
 5. The CUDA environment is stable enough to rerun without access violations or driver/runtime errors.
+
+Use `python benchmarks/cuda_health.py --markdown` before publishing GPU numbers. `numba.cuda.is_available()` alone is not enough because a machine can detect a CUDA driver but still fail during device transfer or kernel launch.
+
+On Windows, use a dedicated CUDA benchmark environment instead of a crowded base Anaconda environment:
+
+```powershell
+conda create -n minitorch-cuda -y -c conda-forge python=3.11 numpy pytest hypothesis numba-cuda cuda-version=12
+conda activate minitorch-cuda
+python benchmarks/cuda_health.py --markdown
+$env:MINITORCH_RUN_CUDA_TESTS="true"
+python -m pytest -q tests/test_tensor_general.py
+```
+
+This keeps the benchmark environment reproducible and uses the NVIDIA-maintained Numba CUDA target/bindings.
 
 ## Interpreting Results
 
