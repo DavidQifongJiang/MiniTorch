@@ -134,20 +134,21 @@ def run_training_benchmark(
     hidden: int,
     rate: float,
     epochs: int,
+    batch_size: int,
     runs: int,
     warmups: int,
     seed: int,
 ):
     config = (
         f"dataset={dataset_name}, points={points}, hidden={hidden}, "
-        f"rate={rate}, epochs={epochs}"
+        f"rate={rate}, epochs={epochs}, batch_size={batch_size}"
     )
     times = []
 
     def run_once(iteration: int):
         set_seed(seed + iteration)
         data = make_dataset(dataset_name, points)
-        trainer = trainer_factory(hidden)
+        trainer = trainer_factory(hidden, batch_size)
         trainer.train(data, rate, max_epochs=epochs, log_fn=quiet_log_fn)
 
     try:
@@ -180,12 +181,12 @@ def run_training_benchmark(
     )
 
 
-def run_cuda_benchmark(args):
+def run_cuda_benchmark(args, dataset_name: str):
     if GPUBackend is None:
         return summarize(
-            name="XOR MLP training",
+            name="MLP training",
             backend="MiniTorch CUDA",
-            config=training_config(args),
+            config=training_config(args, dataset_name),
             runs=args.runs,
             warmups=args.warmups,
             times=[],
@@ -194,24 +195,27 @@ def run_cuda_benchmark(args):
         )
 
     return run_training_benchmark(
-        name="XOR MLP training",
+        name="MLP training",
         backend_label="MiniTorch CUDA",
-        trainer_factory=lambda hidden: FastTrain(hidden, backend=GPUBackend),
-        dataset_name=args.dataset,
+        trainer_factory=lambda hidden, batch_size: FastTrain(
+            hidden, backend=GPUBackend, batch_size=batch_size
+        ),
+        dataset_name=dataset_name,
         points=args.points,
         hidden=args.hidden,
         rate=args.rate,
         epochs=args.epochs,
+        batch_size=args.batch_size,
         runs=args.runs,
         warmups=args.warmups,
         seed=args.seed,
     )
 
 
-def training_config(args):
+def training_config(args, dataset_name: str):
     return (
-        f"dataset={args.dataset}, points={args.points}, hidden={args.hidden}, "
-        f"rate={args.rate}, epochs={args.epochs}"
+        f"dataset={dataset_name}, points={args.points}, hidden={args.hidden}, "
+        f"rate={args.rate}, epochs={args.epochs}, batch_size={args.batch_size}"
     )
 
 
@@ -223,6 +227,37 @@ def markdown_seconds(value: float | None):
 
 def table_cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def gpu_discussion(results: list[BenchmarkResult]):
+    cuda_results = [result for result in results if "CUDA" in result.backend]
+    lines = [
+        "## GPU Discussion",
+        "",
+        "MiniTorch's CUDA backend is implemented with Numba CUDA kernels. GPU numbers are only publishable when the CUDA row completes successfully in the same benchmark environment.",
+        "",
+    ]
+
+    if not cuda_results:
+        lines.append(
+            "CUDA was not requested for this run. Use `--include-cuda` to add MiniTorch CUDA rows."
+        )
+        return lines
+
+    for result in cuda_results:
+        if result.status == "ok":
+            lines.append(
+                f"- `{result.config}` completed on MiniTorch CUDA with median {markdown_seconds(result.median_seconds)}."
+            )
+        else:
+            lines.append(
+                f"- `{result.config}` was `{result.status}` on MiniTorch CUDA: {result.notes}"
+            )
+
+    lines.append(
+        "Do not report a GPU speedup unless the CUDA row is `ok` and the result file captures a clean git commit and stable environment."
+    )
+    return lines
 
 
 def format_markdown(results: list[BenchmarkResult], environment: dict):
@@ -281,7 +316,9 @@ def format_markdown(results: list[BenchmarkResult], environment: dict):
     lines.extend(["", "## Raw Seconds", ""])
     for result in results:
         raw = ", ".join(f"{item:.4f}" for item in result.raw_seconds) or "N/A"
-        lines.append(f"- {result.backend}: `{raw}`")
+        lines.append(f"- {result.backend} ({result.config}): `{raw}`")
+
+    lines.extend([""] + gpu_discussion(results))
 
     return "\n".join(lines) + "\n"
 
@@ -316,9 +353,22 @@ def parse_args():
     parser.add_argument("--epochs", type=int, default=25)
     parser.add_argument("--points", type=int, default=250)
     parser.add_argument("--hidden", type=int, default=10)
+    parser.add_argument("--batch-size", type=int, default=10)
     parser.add_argument("--rate", type=float, default=0.05)
     parser.add_argument("--torch-rate", type=float, default=0.5)
-    parser.add_argument("--dataset", choices=sorted(DATASETS), default="xor")
+    parser.add_argument(
+        "--dataset",
+        choices=sorted(DATASETS),
+        default=None,
+        help="Single dataset to benchmark. Use --datasets for multiple.",
+    )
+    parser.add_argument(
+        "--datasets",
+        nargs="+",
+        choices=sorted(DATASETS),
+        default=None,
+        help="One or more datasets to benchmark.",
+    )
     parser.add_argument("--seed", type=int, default=1337)
     parser.add_argument(
         "--include-cuda",
@@ -338,44 +388,59 @@ def parse_args():
     return parser.parse_args()
 
 
+def selected_datasets(args):
+    if args.datasets:
+        return args.datasets
+    if args.dataset:
+        return [args.dataset]
+    return ["xor"]
+
+
 def main():
     args = parse_args()
     results = []
 
-    results.append(
-        run_training_benchmark(
-            name="XOR MLP training",
-            backend_label="MiniTorch fast CPU",
-            trainer_factory=lambda hidden: FastTrain(hidden, backend=FastTensorBackend),
-            dataset_name=args.dataset,
-            points=args.points,
-            hidden=args.hidden,
-            rate=args.rate,
-            epochs=args.epochs,
-            runs=args.runs,
-            warmups=args.warmups,
-            seed=args.seed,
+    for dataset_name in selected_datasets(args):
+        results.append(
+            run_training_benchmark(
+                name="MLP training",
+                backend_label="MiniTorch fast CPU",
+                trainer_factory=lambda hidden, batch_size: FastTrain(
+                    hidden, backend=FastTensorBackend, batch_size=batch_size
+                ),
+                dataset_name=dataset_name,
+                points=args.points,
+                hidden=args.hidden,
+                rate=args.rate,
+                epochs=args.epochs,
+                batch_size=args.batch_size,
+                runs=args.runs,
+                warmups=args.warmups,
+                seed=args.seed,
+            )
         )
-    )
 
-    if args.include_cuda:
-        results.append(run_cuda_benchmark(args))
+        if args.include_cuda:
+            results.append(run_cuda_benchmark(args, dataset_name))
 
-    results.append(
-        run_training_benchmark(
-            name="XOR MLP training",
-            backend_label="PyTorch CPU",
-            trainer_factory=TorchTrain,
-            dataset_name=args.dataset,
-            points=args.points,
-            hidden=args.hidden,
-            rate=args.torch_rate,
-            epochs=args.epochs,
-            runs=args.runs,
-            warmups=args.warmups,
-            seed=args.seed,
+        results.append(
+            run_training_benchmark(
+                name="MLP training",
+                backend_label="PyTorch CPU fair mini-batch",
+                trainer_factory=lambda hidden, batch_size: TorchTrain(
+                    hidden, batch_size=batch_size
+                ),
+                dataset_name=dataset_name,
+                points=args.points,
+                hidden=args.hidden,
+                rate=args.torch_rate,
+                epochs=args.epochs,
+                batch_size=args.batch_size,
+                runs=args.runs,
+                warmups=args.warmups,
+                seed=args.seed,
+            )
         )
-    )
 
     environment = collect_environment()
     markdown_path, json_path = write_outputs(args, results, environment)

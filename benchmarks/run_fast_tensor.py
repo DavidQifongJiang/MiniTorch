@@ -54,10 +54,11 @@ class Linear(minitorch.Module):
 
 
 class FastTrain:
-    def __init__(self, hidden_layers, backend=FastTensorBackend):
+    def __init__(self, hidden_layers, backend=FastTensorBackend, batch_size=10):
         self.hidden_layers = hidden_layers
         self.model = Network(hidden_layers, backend)
         self.backend = backend
+        self.batch_size = batch_size
 
     def run_one(self, x):
         return self.model.forward(minitorch.tensor([x], backend=self.backend))
@@ -68,7 +69,7 @@ class FastTrain:
     def train(self, data, learning_rate, max_epochs=500, log_fn=default_log_fn):
         self.model = Network(self.hidden_layers, self.backend)
         optim = minitorch.SGD(self.model.parameters(), learning_rate)
-        batch = 10
+        batch = self.batch_size
         losses = []
         total_epoch_time = 0.0
 
@@ -118,6 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--RATE", type=float, default=0.05, help="learning rate")
     parser.add_argument("--BACKEND", default="cpu", help="cpu or gpu")
     parser.add_argument("--DATASET", default="simple", help="simple, split, or xor")
+    parser.add_argument("--BATCH", type=int, default=10, help="batch size")
 
     args = parser.parse_args()
 
@@ -135,4 +137,6 @@ if __name__ == "__main__":
     else:
         backend = FastTensorBackend
 
-    FastTrain(args.HIDDEN, backend=backend).train(data, args.RATE)
+    FastTrain(args.HIDDEN, backend=backend, batch_size=args.BATCH).train(
+        data, args.RATE
+    )

@@ -78,13 +78,13 @@ python benchmarks/run_torch.py
 Run the unified benchmark suite:
 
 ```powershell
-python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor
+python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor
 ```
 
 Include CUDA when the current Python environment has a working CUDA backend:
 
 ```powershell
-python benchmarks/run_all.py --include-cuda --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor
+python benchmarks/run_all.py --include-cuda --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor
 ```
 
 ## Reporting Format
@@ -96,6 +96,16 @@ Use this table format in result files:
 | XOR MLP training | MiniTorch fast CPU | PTS=250, HIDDEN=10, RATE=0.05 | 5 | TBD | Warmed up |
 | XOR MLP training | MiniTorch CUDA | PTS=250, HIDDEN=10, RATE=0.05 | 5 | TBD | Warmed up |
 | XOR MLP training | PyTorch CPU | PTS=250, HIDDEN=10, RATE=0.5 | 5 | TBD | Baseline |
+
+## GPU Reporting
+
+MiniTorch CUDA results are optional. If a CUDA row is `failed` or `skipped`, keep it in the raw benchmark output but do not use it as a performance claim. GPU speedups should only be reported when:
+
+1. `--include-cuda` was used.
+2. The CUDA row completed with `status=ok`.
+3. The result file captured a clean git commit.
+4. The same dataset, points, hidden size, epochs, batch size, and warmup policy were used.
+5. The CUDA environment is stable enough to rerun without access violations or driver/runtime errors.
 
 ## Interpreting Results
 

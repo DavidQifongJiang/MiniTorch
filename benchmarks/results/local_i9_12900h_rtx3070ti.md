@@ -87,13 +87,13 @@ python benchmarks/parallel_check.py
 Unified benchmark runner:
 
 ```powershell
-python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor
+python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor
 ```
 
 Unified benchmark runner with CUDA:
 
 ```powershell
-python benchmarks/run_all.py --include-cuda --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor
+python benchmarks/run_all.py --include-cuda --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor
 ```
 
 ## Raw Output
