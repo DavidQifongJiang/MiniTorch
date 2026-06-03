@@ -150,12 +150,24 @@ def run_training_benchmark(
         trainer = trainer_factory(hidden)
         trainer.train(data, rate, max_epochs=epochs, log_fn=quiet_log_fn)
 
-    for i in range(warmups):
-        run_once(i)
+    try:
+        for i in range(warmups):
+            timed_call(lambda i=i: run_once(i))
 
-    for i in range(runs):
-        elapsed = timed_call(lambda i=i: run_once(warmups + i))
-        times.append(elapsed)
+        for i in range(runs):
+            elapsed = timed_call(lambda i=i: run_once(warmups + i))
+            times.append(elapsed)
+    except Exception as exc:
+        return summarize(
+            name=name,
+            backend=backend_label,
+            config=config,
+            runs=runs,
+            warmups=warmups,
+            times=times,
+            status="failed",
+            notes=f"{type(exc).__name__}: {exc}",
+        )
 
     return summarize(
         name=name,
@@ -209,6 +221,10 @@ def markdown_seconds(value: float | None):
     return f"{value:.4f}s"
 
 
+def table_cell(value):
+    return str(value).replace("|", "\\|").replace("\n", " ")
+
+
 def format_markdown(results: list[BenchmarkResult], environment: dict):
     lines = [
         "# MiniTorch Unified Benchmark Run",
@@ -246,17 +262,17 @@ def format_markdown(results: list[BenchmarkResult], environment: dict):
             "| "
             + " | ".join(
                 [
-                    result.name,
-                    result.backend,
-                    result.config,
+                    table_cell(result.name),
+                    table_cell(result.backend),
+                    table_cell(result.config),
                     str(result.runs),
                     str(result.warmups),
                     markdown_seconds(result.median_seconds),
                     markdown_seconds(result.mean_seconds),
                     markdown_seconds(result.min_seconds),
                     markdown_seconds(result.max_seconds),
-                    result.status,
-                    result.notes,
+                    table_cell(result.status),
+                    table_cell(result.notes),
                 ]
             )
             + " |"
