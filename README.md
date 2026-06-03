@@ -172,6 +172,12 @@ Run the PyTorch comparison trainer:
 python benchmarks/run_torch.py
 ```
 
+Run the standardized benchmark suite:
+
+```bash
+python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor
+```
+
 Benchmark results depend on hardware, Python version, backend availability, tensor size, and warmup behavior. The benchmark numbers above should be treated as project-scale measurements rather than universal claims.
 
 ## Interview Talking Points

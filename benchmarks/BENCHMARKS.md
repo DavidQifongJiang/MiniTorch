@@ -75,6 +75,18 @@ Run the PyTorch baseline:
 python benchmarks/run_torch.py
 ```
 
+Run the unified benchmark suite:
+
+```powershell
+python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor
+```
+
+Include CUDA when the current Python environment has a working CUDA backend:
+
+```powershell
+python benchmarks/run_all.py --include-cuda --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --dataset xor
+```
+
 ## Reporting Format
 
 Use this table format in result files:
