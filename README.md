@@ -1,180 +1,188 @@
 # MiniTorch
 
-MiniTorch is a PyTorch-style deep learning framework built from scratch in Python to reimplement the core layers of modern ML systems: automatic differentiation, multidimensional tensors, optimized CPU kernels, CUDA acceleration, and neural-network training.
+MiniTorch is a PyTorch-style deep learning framework built from scratch in Python. It reimplements the core layers of modern ML systems: scalar autodiff, tensor storage, broadcasting, optimized CPU tensor kernels, CUDA kernels, neural-network modules, and end-to-end training loops.
 
-Instead of treating frameworks like PyTorch as a black box, MiniTorch rebuilds the stack from first principles:
+The goal is not to outperform PyTorch. The goal is to understand what PyTorch is doing underneath: how computation graphs are built, how gradients flow backward, how tensor shape/stride metadata works, and how backend kernels make tensor programs fast.
 
-- mathematical operators and functional primitives
-- scalar reverse-mode autodiff
-- tensor abstractions with broadcasting and shape transforms
-- optimized CPU tensor kernels with Numba
-- CUDA kernels for map / zip / reduce / matrix multiply
-- neural-network primitives and end-to-end training demos
+## Highlights
 
-The goal of this project is both correctness and systems understanding: not just training a model, but understanding how gradients, tensor layouts, parallel kernels, and backend design work together.
-
----
-
-## What MiniTorch Supports
-
-### Core framework features
-- Reverse-mode automatic differentiation
-- Computation graph construction and backpropagation
-- Scalar and tensor abstractions
-- Broadcasting-aware gradient propagation
-- Reshape, permute, reduction, and elementwise tensor ops
-- Batched matrix multiplication
-- Backend-aware execution for CPU and GPU
-
-### Performance features
-- Numba-optimized CPU tensor kernels
-- Parallelized map / zip / reduce kernels
-- CUDA kernels with shared-memory optimizations
-- Batched matrix multiplication on GPU
-
-### Neural-network features
-- ReLU, sigmoid, log, exp
-- Softmax and log-softmax
-- Max reduction and max pooling
-- Average pooling
-- Dropout
-- End-to-end MLP training on nonlinear datasets
-
----
+- Built reverse-mode automatic differentiation from first principles.
+- Implemented scalar and tensor abstractions with operator overloading.
+- Added broadcasting-aware tensor operations, reshaping, permutation, reductions, and batched matrix multiplication.
+- Implemented Numba-optimized CPU kernels for map, zip, reduce, and matrix multiply.
+- Implemented CUDA tensor kernels, including shared-memory matrix multiplication.
+- Built neural-network primitives such as ReLU, sigmoid, softmax, log-softmax, pooling, and dropout.
+- Trained small MLPs on nonlinear classification datasets using the MiniTorch engine.
 
 ## Why This Project Matters
 
-Most ML projects show how to use frameworks.
+Most ML projects show that you can use a framework. MiniTorch shows that you understand how a framework works.
 
-MiniTorch shows how a framework works internally.
+This project is most relevant for:
 
-This project demonstrates:
-- understanding of reverse-mode autodiff instead of only calling `.backward()`
-- understanding of tensor broadcasting and multidimensional gradient propagation
-- understanding of backend design and kernel-level optimization
-- ability to connect theory, correctness checks, and performance engineering
+- Machine learning engineering
+- ML systems and infrastructure
+- Deep learning systems
+- Performance-oriented software engineering
 
-That makes MiniTorch especially relevant for:
-- Machine Learning Engineer roles
-- ML Systems / Infrastructure roles
-- Deep Learning Systems roles
-- Performance-oriented software engineering roles
+It demonstrates practical understanding of autodiff, tensor layouts, backend abstraction, kernel optimization, correctness testing, and training behavior.
 
----
+## Architecture
 
-## Architecture Overview
+MiniTorch is organized as a staged framework build:
 
-MiniTorch is organized as a progression from mathematical foundations to end-to-end training:
+| Stage | Focus | Main Ideas |
+| --- | --- | --- |
+| Module 0 | Foundations | Mathematical operators and higher-order functional primitives |
+| Module 1 | Scalar autodiff | Computation graphs, topological sorting, chain-rule backpropagation |
+| Module 2 | Tensor engine | Storage, shapes, strides, broadcasting, tensor operations |
+| Module 3 | Performance backends | Numba CPU kernels and CUDA kernels |
+| Module 4 | Neural networks | Pooling, dropout, softmax, MLP/CNN-style training demos |
 
-### Module 0 — Foundations
-Implements the core mathematical operators and higher-order functional primitives used across the framework.
+## Repository Structure
 
-Examples:
-- `add`, `mul`, `neg`, `sigmoid`, `relu`, `log`, `exp`
-- `map`, `zipWith`, `reduce`
+```text
+minitorch/     # Core framework implementation
+tests/         # Correctness tests for operators, autodiff, tensors, modules, conv, and NN ops
+examples/      # Small training demos and runnable examples
+benchmarks/    # Backend/parallelism comparison utilities
+demo_app/      # Interactive demo-facing helpers and interfaces
+archive/       # Earlier course milestones kept for reference
+docs/          # Supporting documentation/assets
+```
 
-### Module 1 — Scalar Autodiff
-Builds scalar reverse-mode autodiff from scratch.
+## Core Components
 
-Key ideas:
-- scalar computation graphs
-- operator overloading
-- topological ordering
-- chain-rule-based backpropagation
-- finite-difference derivative checking
+| File/Area | Purpose |
+| --- | --- |
+| `minitorch/operators.py` | Scalar mathematical primitives |
+| `minitorch/autodiff.py` | Backpropagation utilities and topological sorting |
+| `minitorch/scalar.py` | Scalar value object with autodiff history |
+| `minitorch/tensor_data.py` | Tensor storage, indexing, shapes, and strides |
+| `minitorch/tensor_ops.py` | Backend-agnostic tensor map/zip/reduce operations |
+| `minitorch/fast_ops.py` | Numba-optimized CPU tensor backend |
+| `minitorch/cuda_ops.py` | CUDA tensor backend |
+| `minitorch/nn.py` | Neural-network operations such as pooling, dropout, and softmax |
+| `minitorch/module.py` | Module and parameter abstractions |
 
-### Module 2 — Tensor Engine
-Generalizes autodiff from scalars to multidimensional tensors.
+## Installation
 
-Key ideas:
-- tensor storage, shape, and stride handling
-- broadcasting-aware operations
-- reshape / permute / reduction support
-- backend-agnostic tensor interface
-- gradient propagation across tensor operations
+Create a virtual environment and install the project in editable mode:
 
-### Module 3 — Performance Backends
-Adds optimized execution backends.
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+```
 
-CPU backend:
-- Numba JIT compilation
-- parallelized map / zip / reduce
-- optimized batched matrix multiplication
+On Windows PowerShell:
 
-GPU backend:
-- CUDA kernels for tensor map / zip / reduce
-- shared-memory matrix multiplication
-- GPU execution for tensor operations and training workloads
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pip install -e .
+```
 
-### Module 4 — Neural-Network Primitives
-Builds higher-level ML functionality on top of the tensor engine.
+Optional demo dependencies:
 
-Includes:
-- pooling
-- softmax / log-softmax
-- dropout
-- max reduction
-- small MLP training demos on nonlinear datasets
+```bash
+pip install -r requirements.extra.txt
+```
 
----
+## Running Tests
+
+Run the full correctness suite:
+
+```bash
+pytest
+```
+
+Run targeted suites:
+
+```bash
+pytest tests/test_autodiff.py
+pytest tests/test_tensor.py
+pytest tests/test_nn.py
+pytest tests/test_conv.py
+```
+
+The tests cover gradient correctness, scalar/tensor operations, broadcasting, tensor indexing, modules, neural-network utilities, and convolution behavior.
+
+CUDA backend tests are opt-in so the default suite works on machines without a reliable CUDA context:
+
+```bash
+MINITORCH_RUN_CUDA_TESTS=true pytest tests/test_tensor_general.py
+```
+
+On Windows PowerShell:
+
+```powershell
+$env:MINITORCH_RUN_CUDA_TESTS="true"
+pytest tests/test_tensor_general.py
+```
+
+## Running Examples
+
+Train a small tensor-based MLP:
+
+```bash
+python examples/train_mlp.py
+```
+
+Run the scalar MLP demo:
+
+```bash
+python examples/scalar_mlp_demo.py
+```
+
+Run the MNIST CNN-style demo if the optional dataset dependency and MNIST files are available:
+
+```bash
+python examples/mnist_cnn_demo.py
+```
 
 ## Benchmarks
 
 MiniTorch includes both correctness-oriented and performance-oriented validation.
 
-### Current measured results
-- Up to **~8× CPU speedup** on large tensors (for example 1024×1024) when comparing naive and optimized tensor backends
-- Reduced end-to-end training time from **~3.2s to ~1.4s per epoch** after integrating the GPU backend (**~2.3× speedup**)
-- Verified training on multiple nonlinear classification tasks including XOR
+Current measured results from development:
 
-### Benchmarking notes
-To make these results fully reproducible, this repository should include:
-- benchmark scripts
-- hardware information
-- tensor sizes
-- backend settings
-- run instructions
+| Workload | Baseline | Optimized Path | Result |
+| --- | --- | --- | --- |
+| Elementwise tensor ops on large tensors, e.g. 1024 x 1024 | Naive CPU backend | Numba CPU backend | Up to about 8x faster |
+| MLP training epoch | Earlier CPU path | GPU-enabled backend | About 3.2s to 1.4s per epoch |
+| Nonlinear classification | MiniTorch autodiff engine | MLP training loop | Stable convergence on toy datasets including XOR |
 
-A future README update should include a full benchmark table like this:
+Run backend diagnostics:
 
-| Workload | Backend A | Backend B | Result |
-|---|---:|---:|---:|
-| Elementwise tensor ops (1024×1024) | naive CPU | optimized CPU | ~8× faster |
-| MLP training epoch | CPU | GPU | ~2.3× faster |
-| Nonlinear classification | autodiff framework | training stable | converges |
+```bash
+python benchmarks/parallel_check.py
+```
 
----
+Run the PyTorch comparison trainer:
 
-## Example Capabilities
+```bash
+python benchmarks/run_torch.py
+```
 
-MiniTorch supports end-to-end model execution rather than isolated operator demos.
+Benchmark results depend on hardware, Python version, backend availability, tensor size, and warmup behavior. The benchmark numbers above should be treated as project-scale measurements rather than universal claims.
 
-Examples include:
-- training multilayer perceptrons on nonlinear toy datasets
-- validating gradient correctness through derivative checking
-- running tensor operations on CPU and GPU backends
-- applying softmax, dropout, and pooling built on the same tensor engine
+## Interview Talking Points
 
----
+Useful ways to explain this project:
 
-## Project Structure
+- I rebuilt reverse-mode autodiff from scalar graphs to tensor graphs.
+- I implemented shape/stride-aware tensor storage instead of treating tensors as plain nested lists.
+- I validated gradients using derivative checks and nonlinear training tasks.
+- I compared naive and optimized tensor backends and saw performance improve as tensor sizes grew.
+- I connected low-level backend design to visible training behavior.
 
-This repository currently reflects the framework as a staged build-up across modules.
+## Limitations
 
-Suggested interpretation:
+MiniTorch is an educational ML systems framework. It is not intended to replace PyTorch for production training. The value of the project is in the implementation depth: autodiff mechanics, tensor abstraction, backend kernels, correctness tests, and systems-level understanding.
 
-- `mod0-*` — operator foundations
-- `mod1-*` — scalar autodiff
-- `mod2-*` — tensor abstraction
-- `mod3-*` — optimized CPU and CUDA backends
-- `mod4-*` — neural-network primitives and training demos
+## License
 
-A future public-facing cleanup should consolidate the final implementation into a cleaner structure such as:
-
-```text
-minitorch/
-examples/
-benchmarks/
-tests/
-docs/
-archive/
+This project is released under the MIT License.

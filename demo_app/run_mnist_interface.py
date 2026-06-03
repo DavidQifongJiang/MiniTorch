@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from run_mnist_multiclass import ImageTrain, make_mnist
+from examples.mnist_cnn_demo import ImageTrain, make_mnist
 
 
 def render_run_image_interface():
@@ -16,7 +16,15 @@ def render_run_image_interface():
         step=10,
         value=1000,
     )
-    (X_train, y_train) = make_mnist(0, n_training_samples)
+    try:
+        (X_train, y_train) = make_mnist(0, n_training_samples)
+    except Exception as exc:
+        st.warning(
+            "MNIST demo data is not available. Set MINITORCH_DATA_DIR to a folder "
+            "containing the python-mnist files, or install the optional data locally."
+        )
+        st.code(str(exc))
+        return
 
     show = st.number_input("Image", min_value=0, max_value=100, step=1, value=1)
     st.write(

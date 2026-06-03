@@ -1,10 +1,10 @@
 from argparse import ArgumentParser
 
 import streamlit as st
-from interface.streamlit_utils import get_img_tag
-from interface.train import render_train_interface
-from math_interface import render_math_sandbox
-from run_torch import TorchTrain
+from benchmarks.run_torch import TorchTrain
+from demo_app.math_interface import render_math_sandbox
+from examples.interface.streamlit_utils import get_img_tag
+from examples.interface.train import render_train_interface
 
 parser = ArgumentParser()
 parser.add_argument("module_num", type=int)
@@ -39,8 +39,8 @@ module_selection = st.sidebar.radio(
 PAGES = {}
 
 if module_selection == "Module 0":
-    from module_interface import render_module_sandbox
-    from run_manual import ManualTrain
+    from archive.run_manual import ManualTrain
+    from demo_app.module_interface import render_module_sandbox
 
     def render_run_manual_interface():
         st.header("Module 0 - Manual")
@@ -60,8 +60,8 @@ if module_selection == "Module 0":
     PAGES["Module 0: Manual"] = render_run_manual_interface
 
 if module_selection == "Module 1":
-    from run_scalar import ScalarTrain
-    from show_expression_interface import render_show_expression
+    from demo_app.show_expression_interface import render_show_expression
+    from examples.scalar_mlp_demo import ScalarTrain
 
     def render_m1_sandbox():
         return render_math_sandbox(True)
@@ -75,9 +75,9 @@ if module_selection == "Module 1":
     PAGES["Module 1: Scalar"] = render_run_scalar_interface
 
 if module_selection == "Module 2":
-    from run_tensor import TensorTrain
-    from show_expression_interface import render_show_expression
-    from tensor_interface import render_tensor_sandbox
+    from demo_app.show_expression_interface import render_show_expression
+    from demo_app.tensor_interface import render_tensor_sandbox
+    from examples.train_mlp import TensorTrain
 
     def render_run_tensor_interface():
         st.header("Module 2 - Tensors")
@@ -93,7 +93,7 @@ if module_selection == "Module 2":
 
 
 if module_selection == "Module 3":
-    from run_fast_tensor import FastTrain
+    from benchmarks.run_fast_tensor import FastTrain
 
     def render_run_fast_interface():
         st.header("Module 3 - Efficient")
@@ -102,8 +102,8 @@ if module_selection == "Module 3":
     PAGES["Module 3: Efficient"] = render_run_fast_interface
 
 if module_selection == "Module 4":
-    from run_mnist_interface import render_run_image_interface
-    from sentiment_interface import render_run_sentiment_interface
+    from demo_app.run_mnist_interface import render_run_image_interface
+    from demo_app.sentiment_interface import render_run_sentiment_interface
 
     PAGES["Module 4: Images"] = render_run_image_interface
     PAGES["Module 4: Sentiment"] = render_run_sentiment_interface

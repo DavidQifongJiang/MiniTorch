@@ -1,8 +1,8 @@
-import graph_builder
 import networkx as nx
 import plotly.graph_objects as go
 import streamlit as st
-from interface.streamlit_utils import render_function
+from demo_app.helpers import graph_builder
+from examples.interface.streamlit_utils import render_function
 
 import minitorch
 from minitorch import MathTest, MathTestVariable

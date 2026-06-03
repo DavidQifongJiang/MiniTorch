@@ -1,13 +1,22 @@
 import time
 
-import embeddings
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from project.run_sentiment import CNNSentimentKim, encode_sentiment_data
-from run_sentiment import SentenceSentimentTrain
 
-from datasets import load_dataset
+try:
+    import embeddings
+    from datasets import load_dataset
+
+    from archive.run_sentiment import (
+        CNNSentimentKim,
+        SentenceSentimentTrain,
+        encode_sentiment_data,
+    )
+
+    OPTIONAL_IMPORT_ERROR = None
+except Exception as exc:
+    OPTIONAL_IMPORT_ERROR = exc
 
 EMBEDDING_SIZE = 50
 
@@ -47,6 +56,15 @@ def load_data(dataset, n_train, n_val):
 
 
 def render_run_sentiment_interface():
+    if OPTIONAL_IMPORT_ERROR is not None:
+        st.warning(
+            "Sentiment demo dependencies or GloVe data are not available. "
+            "Install optional dependencies and configure the local embedding data "
+            "before running this page."
+        )
+        st.code(str(OPTIONAL_IMPORT_ERROR))
+        return
+
     st.header("Sentiment Classification")
     st.write(
         "[Glue SS2 Dataset documentation](https://huggingface.co/datasets/glue/viewer/sst2/train)"

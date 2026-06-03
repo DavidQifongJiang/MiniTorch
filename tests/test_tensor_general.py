@@ -1,4 +1,5 @@
 import random
+import os
 from typing import Callable, Dict, Iterable, List, Tuple
 
 import numba
@@ -19,9 +20,24 @@ one_arg, two_arg, red_arg = MathTestVariable._comp_testing()
 # The tests in this file only run the main mathematical functions.
 # The difference is that they run with different tensor ops backends.
 
+
+def cuda_context_available() -> bool:
+    if os.getenv("MINITORCH_RUN_CUDA_TESTS", "false").lower() != "true":
+        return False
+
+    if not numba.cuda.is_available():
+        return False
+
+    try:
+        numba.cuda.current_context()
+        return True
+    except Exception:
+        return False
+
 SimpleBackend = minitorch.TensorBackend(minitorch.SimpleOps)
 FastTensorBackend = minitorch.TensorBackend(minitorch.FastOps)
 shared: Dict[str, TensorBackend] = {"fast": FastTensorBackend}
+CUDA_AVAILABLE = cuda_context_available()
 
 # ## Task 3.1
 backend_tests = [pytest.param("fast", marks=pytest.mark.task3_1)]
@@ -30,7 +46,7 @@ backend_tests = [pytest.param("fast", marks=pytest.mark.task3_1)]
 matmul_tests = [pytest.param("fast", marks=pytest.mark.task3_2)]
 
 
-if numba.cuda.is_available():
+if CUDA_AVAILABLE:
     # ## Task 3.3
     backend_tests.append(pytest.param("cuda", marks=pytest.mark.task3_3))
 
@@ -129,7 +145,7 @@ def test_reduce(
     grad_check(tensor_fn, t1)
 
 
-if numba.cuda.is_available():
+if CUDA_AVAILABLE:
 
     @pytest.mark.task3_3
     def test_sum_practice() -> None:

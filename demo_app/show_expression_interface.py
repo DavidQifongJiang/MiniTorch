@@ -1,7 +1,8 @@
-import graph_builder
 import networkx as nx
 import streamlit as st
 from streamlit_ace import st_ace
+
+from demo_app.helpers import graph_builder
 
 
 def render_show_expression(tensor=False):

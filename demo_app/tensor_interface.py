@@ -1,8 +1,8 @@
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
-from project.interface.streamlit_utils import render_function
-from show_tensor import tensor_figure
+from demo_app.helpers.show_tensor import tensor_figure
+from examples.interface.streamlit_utils import render_function
 
 from minitorch import SimpleBackend, Tensor, index_to_position, operators, to_index
 from minitorch.tensor_data import TensorData

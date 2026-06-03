@@ -1,9 +1,20 @@
+import os
+from pathlib import Path
+
 from mnist import MNIST
 
 import minitorch
 
-mndata = MNIST("project/data/")
-images, labels = mndata.load_training()
+DATA_DIR = Path(os.getenv("MINITORCH_DATA_DIR", "data"))
+_MNIST_CACHE = None
+
+
+def load_mnist_training():
+    global _MNIST_CACHE
+    if _MNIST_CACHE is None:
+        mndata = MNIST(str(DATA_DIR))
+        _MNIST_CACHE = mndata.load_training()
+    return _MNIST_CACHE
 
 BACKEND = minitorch.TensorBackend(minitorch.FastOps)
 BATCH = 16
@@ -88,6 +99,7 @@ class Network(minitorch.Module):
 
 
 def make_mnist(start, stop):
+    images, labels = load_mnist_training()
     ys = []
     X = []
     for i in range(start, stop):
