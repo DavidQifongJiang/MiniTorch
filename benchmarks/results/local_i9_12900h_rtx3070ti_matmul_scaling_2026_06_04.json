@@ -1,0 +1,312 @@
+{
+  "environment": {
+    "captured_at_utc": "2026-06-04T23:47:37.984317+00:00",
+    "git_commit": "253640d2b7b411fb9b41e973cf818726d751bf27",
+    "git_status": null,
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:36:00) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "packages": {
+      "minitorch": "installed",
+      "numpy": "2.4.6",
+      "numba": "0.65.1",
+      "torch": "2.12.0+cpu"
+    },
+    "cuda_health": {
+      "numba_cuda_available": true,
+      "runtime_healthy": true,
+      "device_name": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+      "probe_result": 2.0,
+      "error": null
+    },
+    "nvidia_smi": "Thu Jun  4 19:47:38 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 581.80                 Driver Version: 581.80         CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3070 ...  WDDM  |   00000000:01:00.0 Off |                  N/A |\n| N/A   50C    P0             30W /  146W |     192MiB /   8192MiB |     19%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A           25168      C   ...nvs\\minitorch-cuda\\python.exe      N/A      |\n+-----------------------------------------------------------------------------------------+"
+  },
+  "results": [
+    {
+      "size": 32,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.00029399999766610563,
+      "mean_seconds": 0.0003255199997511227,
+      "min_seconds": 0.0002899999999499414,
+      "max_seconds": 0.000424000001657987,
+      "raw_seconds": [
+        0.000424000001657987,
+        0.00032619999910821207,
+        0.0002934000003733672,
+        0.00029399999766610563,
+        0.0002899999999499414
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 32,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0030121999989205506,
+      "mean_seconds": 0.002908459999889601,
+      "min_seconds": 0.002679500001249835,
+      "max_seconds": 0.0031210999986797106,
+      "raw_seconds": [
+        0.00301709999985178,
+        0.0030121999989205506,
+        0.002712400000746129,
+        0.002679500001249835,
+        0.0031210999986797106
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 32,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 3.0000010156072676e-06,
+      "mean_seconds": 4.139999509789049e-06,
+      "min_seconds": 2.9000002541579306e-06,
+      "max_seconds": 8.299997716676444e-06,
+      "raw_seconds": [
+        8.299997716676444e-06,
+        3.5000011848751456e-06,
+        3.0000010156072676e-06,
+        2.9000002541579306e-06,
+        2.9999973776284605e-06
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup"
+    },
+    {
+      "size": 64,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0013345000006665941,
+      "mean_seconds": 0.0013173600003938192,
+      "min_seconds": 0.001154800000222167,
+      "max_seconds": 0.0014018000001669861,
+      "raw_seconds": [
+        0.001154800000222167,
+        0.0013809000010951422,
+        0.0014018000001669861,
+        0.0013147999998182058,
+        0.0013345000006665941
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 64,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.003107199998339638,
+      "mean_seconds": 0.0033350999998219776,
+      "min_seconds": 0.003068000001803739,
+      "max_seconds": 0.0038693999995302875,
+      "raw_seconds": [
+        0.0038693999995302875,
+        0.003068000001803739,
+        0.003090800000791205,
+        0.003540099998645019,
+        0.003107199998339638
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 64,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 2.099999983329326e-05,
+      "mean_seconds": 2.3779999901307745e-05,
+      "min_seconds": 1.0700001439545304e-05,
+      "max_seconds": 4.4699998397845775e-05,
+      "raw_seconds": [
+        4.4699998397845775e-05,
+        2.5099998310906813e-05,
+        1.7400001524947584e-05,
+        2.099999983329326e-05,
+        1.0700001439545304e-05
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup"
+    },
+    {
+      "size": 128,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.003955100000894163,
+      "mean_seconds": 0.0038221400005568284,
+      "min_seconds": 0.003584700003557373,
+      "max_seconds": 0.0040137999967555515,
+      "raw_seconds": [
+        0.0040137999967555515,
+        0.0035984000023745466,
+        0.0039586999992025085,
+        0.003584700003557373,
+        0.003955100000894163
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 128,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.005293900001561269,
+      "mean_seconds": 0.005237539998779539,
+      "min_seconds": 0.004609799998434028,
+      "max_seconds": 0.005839499997819075,
+      "raw_seconds": [
+        0.004609799998434028,
+        0.005083099997136742,
+        0.005293900001561269,
+        0.005361399998946581,
+        0.005839499997819075
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 128,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 2.13999992411118e-05,
+      "mean_seconds": 2.2119999630376697e-05,
+      "min_seconds": 2.0600000425474718e-05,
+      "max_seconds": 2.6300000172341242e-05,
+      "raw_seconds": [
+        2.6300000172341242e-05,
+        2.13999992411118e-05,
+        2.0699997548945248e-05,
+        2.0600000425474718e-05,
+        2.1600000764010474e-05
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup"
+    },
+    {
+      "size": 256,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.021036999998614192,
+      "mean_seconds": 0.0217482399995788,
+      "min_seconds": 0.0201030999996874,
+      "max_seconds": 0.02414649999991525,
+      "raw_seconds": [
+        0.021036999998614192,
+        0.020994700000301236,
+        0.02414649999991525,
+        0.02245989999937592,
+        0.0201030999996874
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 256,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.008230200000980403,
+      "mean_seconds": 0.008176739999908023,
+      "min_seconds": 0.008000900001206901,
+      "max_seconds": 0.00825049999912153,
+      "raw_seconds": [
+        0.008000900001206901,
+        0.008246500001405366,
+        0.008230200000980403,
+        0.008155599996825913,
+        0.00825049999912153
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 256,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0001548000000184402,
+      "mean_seconds": 0.00018136000071535818,
+      "min_seconds": 0.00015190000340226106,
+      "max_seconds": 0.00028200000087963417,
+      "raw_seconds": [
+        0.00015419999908772297,
+        0.00028200000087963417,
+        0.00016390000018873252,
+        0.0001548000000184402,
+        0.00015190000340226106
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup"
+    },
+    {
+      "size": 512,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.292770299998665,
+      "mean_seconds": 0.28971951999919837,
+      "min_seconds": 0.27283299999908195,
+      "max_seconds": 0.3047020000012708,
+      "raw_seconds": [
+        0.29839889999857405,
+        0.3047020000012708,
+        0.27283299999908195,
+        0.292770299998665,
+        0.2798933999984001
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 512,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.026948700000502868,
+      "mean_seconds": 0.027149780000036115,
+      "min_seconds": 0.02662380000037956,
+      "max_seconds": 0.027851800001371885,
+      "raw_seconds": [
+        0.027660799998557195,
+        0.026948700000502868,
+        0.02662380000037956,
+        0.027851800001371885,
+        0.026663799999369076
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; construction and host/device transfer excluded"
+    },
+    {
+      "size": 512,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0009601999990991317,
+      "mean_seconds": 0.0010371999997005332,
+      "min_seconds": 0.000920300000871066,
+      "max_seconds": 0.0013871000010112766,
+      "raw_seconds": [
+        0.0013871000010112766,
+        0.0009601999990991317,
+        0.0009465999974054284,
+        0.000920300000871066,
+        0.0009718000001157634
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup"
+    }
+  ]
+}

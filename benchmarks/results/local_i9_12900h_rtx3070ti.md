@@ -92,6 +92,33 @@ CUDA interpretation: the CUDA backend is now functionally validated, but it is s
 
 Historical CUDA note: base Anaconda previously failed a CUDA health probe with a Windows/Numba access violation. The dedicated `minitorch-cuda` environment fixes this by using the NVIDIA-maintained Numba CUDA target/bindings.
 
+## Matrix Multiplication Scaling Run
+
+Matrix multiplication scaling isolates backend compute behavior by timing preloaded square tensors. Tensor construction and host/device transfer are excluded.
+
+```powershell
+conda activate minitorch-cuda
+python benchmarks/run_matmul_scaling.py --include-cuda --include-torch --runs 5 --warmups 1 --sizes 32 64 128 256 512 --output-name local_i9_12900h_rtx3070ti_matmul_scaling_2026_06_04
+```
+
+| Field | Value |
+| --- | --- |
+| Date | 2026-06-04 |
+| Git commit | `253640d2b7b411fb9b41e973cf818726d751bf27` |
+| Git status at capture | clean |
+| Detailed Markdown | [`local_i9_12900h_rtx3070ti_matmul_scaling_2026_06_04.md`](local_i9_12900h_rtx3070ti_matmul_scaling_2026_06_04.md) |
+| Raw JSON | [`local_i9_12900h_rtx3070ti_matmul_scaling_2026_06_04.json`](local_i9_12900h_rtx3070ti_matmul_scaling_2026_06_04.json) |
+
+| Matrix Size | MiniTorch fast CPU median | MiniTorch CUDA median | PyTorch CPU median | CUDA vs MiniTorch CPU |
+| ---: | ---: | ---: | ---: | ---: |
+| 32 | 0.000294s | 0.003012s | 0.000003s | 0.10x |
+| 64 | 0.001335s | 0.003107s | 0.000021s | 0.43x |
+| 128 | 0.003955s | 0.005294s | 0.000021s | 0.75x |
+| 256 | 0.021037s | 0.008230s | 0.000155s | 2.56x |
+| 512 | 0.292770s | 0.026949s | 0.000960s | 10.86x |
+
+Scaling interpretation: CUDA is slower on small matrices because launch overhead dominates. Once the matrix is large enough, the CUDA backend overtakes MiniTorch fast CPU, reaching about 10.9x speedup at 512x512. PyTorch CPU remains much faster because it uses mature native BLAS/kernel implementations.
+
 Superseded note: the earlier `local_i9_12900h_rtx3070ti_run_2026_06_03` result used MiniTorch mini-batches but a PyTorch full-batch baseline. It is retained as raw history but should not be used as the main comparison.
 
 ## Commands

@@ -177,6 +177,21 @@ expected for this implementation because training launches many small kernels
 and still pays host/device transfer overhead. The benchmark is used to study
 backend behavior, not to claim GPU speedup.
 
+Matrix multiplication scaling shows the workload-size effect more clearly:
+
+| Matrix Size | MiniTorch fast CPU | MiniTorch CUDA | CUDA vs MiniTorch CPU |
+| ---: | ---: | ---: | ---: |
+| 32 | 0.000294s | 0.003012s | 0.10x |
+| 64 | 0.001335s | 0.003107s | 0.43x |
+| 128 | 0.003955s | 0.005294s | 0.75x |
+| 256 | 0.021037s | 0.008230s | 2.56x |
+| 512 | 0.292770s | 0.026949s | 10.86x |
+
+CUDA loses on small matrices where launch overhead dominates, then overtakes
+MiniTorch fast CPU once the matrix is large enough to amortize that overhead.
+PyTorch CPU remains much faster overall because it relies on mature native
+linear algebra kernels.
+
 Run backend diagnostics:
 
 ```bash
@@ -205,6 +220,12 @@ Run the CUDA validation benchmark:
 
 ```bash
 python benchmarks/run_all.py --include-cuda --runs 3 --warmups 1 --epochs 5 --points 100 --hidden 10 --batch-size 10 --datasets simple split xor
+```
+
+Run matrix multiplication scaling:
+
+```bash
+python benchmarks/run_matmul_scaling.py --include-cuda --include-torch --runs 5 --warmups 1 --sizes 32 64 128 256 512
 ```
 
 Benchmark results depend on hardware, Python version, backend availability, tensor size, and warmup behavior. The benchmark numbers above should be treated as project-scale measurements rather than universal claims.
