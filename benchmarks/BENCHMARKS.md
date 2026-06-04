@@ -87,6 +87,12 @@ Run the unified benchmark suite:
 python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor
 ```
 
+Run matrix multiplication scaling benchmarks:
+
+```powershell
+python benchmarks/run_matmul_scaling.py --include-cuda --include-torch --runs 5 --warmups 1 --sizes 32 64 128 256
+```
+
 Include CUDA when the current Python environment has a working CUDA backend:
 
 ```powershell
