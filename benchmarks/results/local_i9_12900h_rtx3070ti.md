@@ -92,6 +92,29 @@ CUDA interpretation: the CUDA backend is now functionally validated, but it is s
 
 Historical CUDA note: base Anaconda previously failed a CUDA health probe with a Windows/Numba access violation. The dedicated `minitorch-cuda` environment fixes this by using the NVIDIA-maintained Numba CUDA target/bindings.
 
+## Scaled MLP Training Run
+
+This run increases the training workload to test whether MiniTorch CUDA improves when each batch has more work.
+
+```powershell
+conda activate minitorch-cuda
+python benchmarks/run_all.py --include-cuda --runs 2 --warmups 1 --epochs 3 --points 1000 --hidden 64 --batch-size 100 --datasets xor --output-name local_i9_12900h_rtx3070ti_mlp_scaled_xor_2026_06_04
+```
+
+| Field | Value |
+| --- | --- |
+| Date | 2026-06-04 |
+| Git commit | `eab119914f30e7456805b549ab26052978dfa525` |
+| Git status at capture | clean |
+| Detailed Markdown | [`local_i9_12900h_rtx3070ti_mlp_scaled_xor_2026_06_04.md`](local_i9_12900h_rtx3070ti_mlp_scaled_xor_2026_06_04.md) |
+| Raw JSON | [`local_i9_12900h_rtx3070ti_mlp_scaled_xor_2026_06_04.json`](local_i9_12900h_rtx3070ti_mlp_scaled_xor_2026_06_04.json) |
+
+| Dataset | Config | MiniTorch fast CPU median | MiniTorch CUDA median | PyTorch CPU median |
+| --- | --- | ---: | ---: | ---: |
+| xor | points=1000, hidden=64, epochs=3, batch_size=100 | 3.2728s | 6.3295s | 0.0171s |
+
+Scaled MLP interpretation: increasing the workload narrows the gap, but CUDA is still slower for this training path. The likely cause is that the MLP workload still launches many separate kernels and repeatedly creates batch tensors, so overhead remains significant even when batches are larger.
+
 ## Matrix Multiplication Scaling Run
 
 Matrix multiplication scaling isolates backend compute behavior by timing preloaded square tensors. Tensor construction and host/device transfer are excluded.

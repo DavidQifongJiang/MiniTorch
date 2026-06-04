@@ -1,0 +1,78 @@
+{
+  "environment": {
+    "captured_at_utc": "2026-06-04T23:55:22.629803+00:00",
+    "git_commit": "eab119914f30e7456805b549ab26052978dfa525",
+    "git_status": null,
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:36:00) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "packages": {
+      "minitorch": "installed",
+      "numpy": "2.4.6",
+      "numba": "0.65.1",
+      "torch": "2.12.0+cpu"
+    },
+    "cuda_health": {
+      "numba_cuda_available": true,
+      "runtime_healthy": true,
+      "device_name": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+      "probe_result": 2.0,
+      "error": null
+    },
+    "nvidia_smi": "Thu Jun  4 19:55:22 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 581.80                 Driver Version: 581.80         CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3070 ...  WDDM  |   00000000:01:00.0 Off |                  N/A |\n| N/A   49C    P0             26W /  150W |     190MiB /   8192MiB |     39%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A           15096      C   ...nvs\\minitorch-cuda\\python.exe      N/A      |\n+-----------------------------------------------------------------------------------------+"
+  },
+  "results": [
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=xor, points=1000, hidden=64, rate=0.05, epochs=3, batch_size=100",
+      "runs": 2,
+      "warmups": 1,
+      "median_seconds": 3.272805549999248,
+      "mean_seconds": 3.272805549999248,
+      "min_seconds": 3.2451910999989195,
+      "max_seconds": 3.3004199999995762,
+      "raw_seconds": [
+        3.3004199999995762,
+        3.2451910999989195
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch CUDA",
+      "config": "dataset=xor, points=1000, hidden=64, rate=0.05, epochs=3, batch_size=100",
+      "runs": 2,
+      "warmups": 1,
+      "median_seconds": 6.3294602500009205,
+      "mean_seconds": 6.3294602500009205,
+      "min_seconds": 6.1606922000028135,
+      "max_seconds": 6.4982282999990275,
+      "raw_seconds": [
+        6.4982282999990275,
+        6.1606922000028135
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=xor, points=1000, hidden=64, rate=0.5, epochs=3, batch_size=100",
+      "runs": 2,
+      "warmups": 1,
+      "median_seconds": 0.017070400001102826,
+      "mean_seconds": 0.017070400001102826,
+      "min_seconds": 0.016410100000939565,
+      "max_seconds": 0.017730700001266086,
+      "raw_seconds": [
+        0.017730700001266086,
+        0.016410100000939565
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup"
+    }
+  ]
+}

@@ -177,6 +177,13 @@ expected for this implementation because training launches many small kernels
 and still pays host/device transfer overhead. The benchmark is used to study
 backend behavior, not to claim GPU speedup.
 
+With a larger MLP workload (`points=1000`, `hidden=64`, `batch_size=100`),
+MiniTorch CUDA narrows the gap but still does not beat MiniTorch fast CPU:
+
+| Dataset | MiniTorch fast CPU | MiniTorch CUDA | PyTorch CPU |
+| --- | ---: | ---: | ---: |
+| xor | 3.2728s | 6.3295s | 0.0171s |
+
 Matrix multiplication scaling shows the workload-size effect more clearly:
 
 | Matrix Size | MiniTorch fast CPU | MiniTorch CUDA | CUDA vs MiniTorch CPU |
