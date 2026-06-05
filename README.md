@@ -14,6 +14,30 @@ The goal is not to outperform PyTorch. The goal is to understand what PyTorch is
 - Built neural-network primitives such as ReLU, sigmoid, softmax, log-softmax, pooling, and dropout.
 - Trained small MLPs on nonlinear classification datasets using the MiniTorch engine.
 
+## Performance Snapshot
+
+MiniTorch is an educational framework, not a PyTorch replacement. The benchmark
+story is still valuable because it shows measurable backend behavior across CPU,
+CUDA, and PyTorch baselines.
+
+| Signal | Result | Why It Matters |
+| --- | --- | --- |
+| Matrix multiply scaling | MiniTorch CUDA is 10.86x faster than MiniTorch fast CPU at 512x512 | Shows GPU kernels win once the workload is large enough |
+| 10k-point MLP training | MiniTorch CUDA: 24.3043s vs MiniTorch fast CPU: 25.4046s | Shows larger batches/preloaded tensors can make CUDA viable |
+| PyTorch baseline | PyTorch CPU remains far faster: 0.0829s on the same 10k MLP workload | Keeps the comparison honest against production-grade kernels |
+
+```mermaid
+xychart-beta
+    title "MiniTorch Matrix Multiplication Scaling"
+    x-axis [32, 64, 128, 256, 512]
+    y-axis "Seconds" 0 --> 0.30
+    line "MiniTorch fast CPU" [0.000294, 0.001335, 0.003955, 0.021037, 0.292770]
+    line "MiniTorch CUDA" [0.003012, 0.003107, 0.005294, 0.008230, 0.026949]
+```
+
+Detailed methodology, raw timings, timing breakdowns, and CUDA limitations are
+kept in the [Benchmarks](#benchmarks) section.
+
 ## Why This Project Matters
 
 Most ML projects show that you can use a framework. MiniTorch shows that you understand how a framework works.
@@ -207,15 +231,6 @@ Matrix multiplication scaling shows the workload-size effect more clearly:
 | 128 | 0.003955s | 0.005294s | 0.75x |
 | 256 | 0.021037s | 0.008230s | 2.56x |
 | 512 | 0.292770s | 0.026949s | 10.86x |
-
-```mermaid
-xychart-beta
-    title "MiniTorch Matrix Multiplication Scaling"
-    x-axis [32, 64, 128, 256, 512]
-    y-axis "Seconds" 0 --> 0.30
-    line "MiniTorch fast CPU" [0.000294, 0.001335, 0.003955, 0.021037, 0.292770]
-    line "MiniTorch CUDA" [0.003012, 0.003107, 0.005294, 0.008230, 0.026949]
-```
 
 CUDA loses on small matrices where launch overhead dominates, then overtakes
 MiniTorch fast CPU once the matrix is large enough to amortize that overhead.
