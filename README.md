@@ -184,6 +184,20 @@ MiniTorch CUDA narrows the gap but still does not beat MiniTorch fast CPU:
 | --- | ---: | ---: | ---: |
 | xor | 3.2728s | 6.3295s | 0.0171s |
 
+With benchmark-only preloaded batches and evaluation disabled during timing, a larger
+10,000-point XOR workload gives the CUDA backend enough work to slightly beat
+MiniTorch fast CPU:
+
+| Dataset | Config | MiniTorch fast CPU | MiniTorch CUDA | PyTorch CPU |
+| --- | --- | ---: | ---: | ---: |
+| xor | points=10000, hidden=64, epochs=3, batch_size=1000, preloaded batches | 25.4046s | 24.3043s | 0.0829s |
+
+Timing breakdown shows that loss/backward dominates this workload. MiniTorch CUDA
+spends less time in loss/backward than MiniTorch fast CPU, but still pays extra
+forward/optimizer overhead. A full-batch CUDA run at `batch_size=10000` currently
+fails with an assertion, so the safe claim is limited to the validated 1,000-item
+batches above.
+
 Matrix multiplication scaling shows the workload-size effect more clearly:
 
 | Matrix Size | MiniTorch fast CPU | MiniTorch CUDA | CUDA vs MiniTorch CPU |
@@ -193,6 +207,15 @@ Matrix multiplication scaling shows the workload-size effect more clearly:
 | 128 | 0.003955s | 0.005294s | 0.75x |
 | 256 | 0.021037s | 0.008230s | 2.56x |
 | 512 | 0.292770s | 0.026949s | 10.86x |
+
+```mermaid
+xychart-beta
+    title "MiniTorch Matrix Multiplication Scaling"
+    x-axis [32, 64, 128, 256, 512]
+    y-axis "Seconds" 0 --> 0.30
+    line "MiniTorch fast CPU" [0.000294, 0.001335, 0.003955, 0.021037, 0.292770]
+    line "MiniTorch CUDA" [0.003012, 0.003107, 0.005294, 0.008230, 0.026949]
+```
 
 CUDA loses on small matrices where launch overhead dominates, then overtakes
 MiniTorch fast CPU once the matrix is large enough to amortize that overhead.
@@ -227,6 +250,12 @@ Run the CUDA validation benchmark:
 
 ```bash
 python benchmarks/run_all.py --include-cuda --runs 3 --warmups 1 --epochs 5 --points 100 --hidden 10 --batch-size 10 --datasets simple split xor
+```
+
+Run a larger MLP benchmark with preloaded batches and timing breakdown:
+
+```bash
+python benchmarks/run_all.py --include-cuda --runs 2 --warmups 1 --epochs 3 --points 10000 --hidden 64 --batch-size 1000 --datasets xor --preload-batches --skip-eval --collect-timing
 ```
 
 Run matrix multiplication scaling:

@@ -27,7 +27,9 @@ If benchmarks are run on another machine, create a separate result file under `b
 2. Record Python, OS, CPU, GPU, driver, CUDA, and dependency versions.
 3. Run from a clean terminal with no training jobs, games, browsers, or IDE indexing tasks running in the background when possible.
 4. Warm up JIT-backed code before measuring. Numba compilation time should not be mixed with steady-state runtime unless the result is explicitly labeled cold-start.
-5. Run each benchmark at least 5 times.
+5. Run each small/standard benchmark at least 5 times. For long-running scaled
+   CUDA experiments, at least 2 measured runs are acceptable if the raw timings
+   and exact command are preserved.
 6. Report median time as the headline number.
 7. Keep raw command output in the result file or a linked artifact.
 8. Separate CPU, fast CPU, CUDA, and PyTorch baseline numbers.
@@ -87,10 +89,16 @@ Run the unified benchmark suite:
 python benchmarks/run_all.py --runs 5 --warmups 1 --epochs 25 --points 250 --hidden 10 --batch-size 10 --datasets simple split xor
 ```
 
+Run a larger MLP benchmark with batch preloading and timing breakdown:
+
+```powershell
+python benchmarks/run_all.py --include-cuda --runs 2 --warmups 1 --epochs 3 --points 10000 --hidden 64 --batch-size 1000 --datasets xor --preload-batches --skip-eval --collect-timing
+```
+
 Run matrix multiplication scaling benchmarks:
 
 ```powershell
-python benchmarks/run_matmul_scaling.py --include-cuda --include-torch --runs 5 --warmups 1 --sizes 32 64 128 256
+python benchmarks/run_matmul_scaling.py --include-cuda --include-torch --runs 5 --warmups 1 --sizes 32 64 128 256 512
 ```
 
 Include CUDA when the current Python environment has a working CUDA backend:
@@ -120,6 +128,11 @@ MiniTorch CUDA results are optional. If a CUDA row is `failed` or `skipped`, kee
 5. The CUDA environment is stable enough to rerun without access violations or driver/runtime errors.
 
 Use `python benchmarks/cuda_health.py --markdown` before publishing GPU numbers. `numba.cuda.is_available()` alone is not enough because a machine can detect a CUDA driver but still fail during device transfer or kernel launch.
+
+The `run_all.py` flags `--preload-batches`, `--skip-eval`, and
+`--collect-timing` are benchmark controls, not framework behavior changes. Use
+them when the goal is to study backend training cost rather than end-to-end
+demo behavior.
 
 On Windows, use a dedicated CUDA benchmark environment instead of a crowded base Anaconda environment:
 

@@ -1,0 +1,129 @@
+{
+  "environment": {
+    "captured_at_utc": "2026-06-05T00:25:06.474972+00:00",
+    "git_commit": "b02ac9f7f135ea8182d8b34bc7fef2e3d359047b",
+    "git_status": null,
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:36:00) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "packages": {
+      "minitorch": "installed",
+      "numpy": "2.4.6",
+      "numba": "0.65.1",
+      "torch": "2.12.0+cpu"
+    },
+    "cuda_health": {
+      "numba_cuda_available": true,
+      "runtime_healthy": true,
+      "device_name": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+      "probe_result": 2.0,
+      "error": null
+    },
+    "nvidia_smi": "Thu Jun  4 20:25:06 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 581.80                 Driver Version: 581.80         CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3070 ...  WDDM  |   00000000:01:00.0 Off |                  N/A |\n| N/A   51C    P0             38W /  137W |     210MiB /   8192MiB |      0%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A           33572      C   ...nvs\\minitorch-cuda\\python.exe      N/A      |\n+-----------------------------------------------------------------------------------------+"
+  },
+  "results": [
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch fast CPU",
+      "config": "dataset=xor, points=10000, hidden=64, rate=0.05, epochs=3, batch_size=10000, preload_batches=true, evaluate=false, collect_timing=true",
+      "runs": 2,
+      "warmups": 1,
+      "median_seconds": 24.866232399997898,
+      "mean_seconds": 24.866232399997898,
+      "min_seconds": 24.854699899999105,
+      "max_seconds": 24.87776489999669,
+      "raw_seconds": [
+        24.854699899999105,
+        24.87776489999669
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup",
+      "median_timing_seconds": {
+        "backward_seconds": 20.199369250000018,
+        "data_prepare_seconds": 0.011138299998492585,
+        "epochs": 3.0,
+        "forward_seconds": 4.6394569000003685,
+        "optimizer_seconds": 0.004649299999073264,
+        "total_epoch_seconds": 24.84345555305481
+      },
+      "raw_timing_seconds": [
+        {
+          "data_prepare_seconds": 0.010828999998921063,
+          "forward_seconds": 4.624180400001933,
+          "backward_seconds": 20.208975800003827,
+          "optimizer_seconds": 0.004743700003018603,
+          "total_epoch_seconds": 24.83766746520996,
+          "epochs": 3
+        },
+        {
+          "data_prepare_seconds": 0.011447599998064106,
+          "forward_seconds": 4.654733399998804,
+          "backward_seconds": 20.18976269999621,
+          "optimizer_seconds": 0.004554899995127926,
+          "total_epoch_seconds": 24.849243640899658,
+          "epochs": 3
+        }
+      ]
+    },
+    {
+      "name": "MLP training",
+      "backend": "MiniTorch CUDA",
+      "config": "dataset=xor, points=10000, hidden=64, rate=0.05, epochs=3, batch_size=10000, preload_batches=true, evaluate=false, collect_timing=true",
+      "runs": 2,
+      "warmups": 1,
+      "median_seconds": null,
+      "mean_seconds": null,
+      "min_seconds": null,
+      "max_seconds": null,
+      "raw_seconds": [],
+      "status": "failed",
+      "notes": "AssertionError: ",
+      "median_timing_seconds": {},
+      "raw_timing_seconds": []
+    },
+    {
+      "name": "MLP training",
+      "backend": "PyTorch CPU fair mini-batch",
+      "config": "dataset=xor, points=10000, hidden=64, rate=0.5, epochs=3, batch_size=10000, preload_batches=true, evaluate=false, collect_timing=true",
+      "runs": 2,
+      "warmups": 1,
+      "median_seconds": 0.07554200000049605,
+      "mean_seconds": 0.07554200000049605,
+      "min_seconds": 0.027319900000293273,
+      "max_seconds": 0.12376410000069882,
+      "raw_seconds": [
+        0.12376410000069882,
+        0.027319900000293273
+      ],
+      "status": "ok",
+      "notes": "median excludes warmup",
+      "median_timing_seconds": {
+        "backward_seconds": 0.009439050001674332,
+        "data_prepare_seconds": 0.05973450000055891,
+        "epochs": 3.0,
+        "forward_seconds": 0.0012283000014576828,
+        "optimizer_seconds": 0.0004704999955720268,
+        "total_epoch_seconds": 0.011157200004163315
+      },
+      "raw_timing_seconds": [
+        {
+          "data_prepare_seconds": 0.11276290000023437,
+          "forward_seconds": 0.0011846000052173622,
+          "backward_seconds": 0.004699700002674945,
+          "optimizer_seconds": 0.00044889999480801634,
+          "total_epoch_seconds": 0.006353000004310161,
+          "epochs": 3
+        },
+        {
+          "data_prepare_seconds": 0.006706100000883453,
+          "forward_seconds": 0.0012719999976980034,
+          "backward_seconds": 0.014178400000673719,
+          "optimizer_seconds": 0.0004920999963360373,
+          "total_epoch_seconds": 0.01596140000401647,
+          "epochs": 3
+        }
+      ]
+    }
+  ]
+}
