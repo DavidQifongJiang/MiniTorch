@@ -16,10 +16,6 @@ The goal is not to outperform PyTorch. The goal is to understand what PyTorch is
 
 ## Performance Snapshot
 
-MiniTorch is an educational framework, not a PyTorch replacement. The benchmark
-story is still valuable because it shows measurable backend behavior across CPU,
-CUDA, and PyTorch baselines.
-
 | Signal | Result | Why It Matters |
 | --- | --- | --- |
 | Matrix multiply scaling | MiniTorch CUDA is 10.86x faster than MiniTorch fast CPU at 512x512 | Shows GPU kernels win once the workload is large enough |
