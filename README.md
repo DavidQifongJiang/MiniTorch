@@ -15,6 +15,8 @@ The goal is not to outperform PyTorch. The goal is to understand what PyTorch is
 - Trained small MLPs on nonlinear classification datasets using the MiniTorch engine.
 
 ## Performance Snapshot
+Detailed methodology, raw timings, timing breakdowns, and CUDA limitations are
+kept in the [Benchmarks](#benchmarks) section.
 
 | Signal | Result | Why It Matters |
 | --- | --- | --- |
@@ -31,8 +33,6 @@ xychart-beta
     line "MiniTorch CUDA" [0.003012, 0.003107, 0.005294, 0.008230, 0.026949]
 ```
 
-Detailed methodology, raw timings, timing breakdowns, and CUDA limitations are
-kept in the [Benchmarks](#benchmarks) section.
 
 ## Why This Project Matters
 
