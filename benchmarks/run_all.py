@@ -52,6 +52,8 @@ class BenchmarkResult:
     raw_seconds: list[float]
     status: str
     notes: str
+    median_timing_seconds: dict[str, float]
+    raw_timing_seconds: list[dict[str, float]]
 
 
 def quiet_log_fn(*args, **kwargs):
@@ -100,7 +102,19 @@ def summarize(
     times: list[float],
     status: str = "ok",
     notes: str = "",
+    raw_timing_seconds: list[dict[str, float]] | None = None,
 ):
+    raw_timing_seconds = raw_timing_seconds or []
+    median_timing_seconds = {}
+    if raw_timing_seconds:
+        keys = sorted({key for item in raw_timing_seconds for key in item})
+        median_timing_seconds = {
+            key: statistics.median(
+                item.get(key, 0.0) for item in raw_timing_seconds
+            )
+            for key in keys
+        }
+
     if not times:
         return BenchmarkResult(
             name=name,
@@ -115,6 +129,8 @@ def summarize(
             raw_seconds=[],
             status=status,
             notes=notes,
+            median_timing_seconds=median_timing_seconds,
+            raw_timing_seconds=raw_timing_seconds,
         )
 
     return BenchmarkResult(
@@ -130,6 +146,8 @@ def summarize(
         raw_seconds=times,
         status=status,
         notes=notes,
+        median_timing_seconds=median_timing_seconds,
+        raw_timing_seconds=raw_timing_seconds,
     )
 
 
@@ -146,26 +164,51 @@ def run_training_benchmark(
     runs: int,
     warmups: int,
     seed: int,
+    preload_batches: bool,
+    evaluate: bool,
+    collect_timing: bool,
 ):
     config = (
         f"dataset={dataset_name}, points={points}, hidden={hidden}, "
         f"rate={rate}, epochs={epochs}, batch_size={batch_size}"
     )
+    if preload_batches:
+        config += ", preload_batches=true"
+    if not evaluate:
+        config += ", evaluate=false"
+    if collect_timing:
+        config += ", collect_timing=true"
     times = []
+    timing_records = []
 
     def run_once(iteration: int):
         set_seed(seed + iteration)
         data = make_dataset(dataset_name, points)
-        trainer = trainer_factory(hidden, batch_size)
+        trainer = trainer_factory(
+            hidden,
+            batch_size,
+            preload_batches,
+            evaluate,
+            collect_timing,
+        )
         trainer.train(data, rate, max_epochs=epochs, log_fn=quiet_log_fn)
+        return getattr(trainer, "last_timing", {})
 
     try:
         for i in range(warmups):
             timed_call(lambda i=i: run_once(i))
 
         for i in range(runs):
-            elapsed = timed_call(lambda i=i: run_once(warmups + i))
+            timing_record = {}
+
+            def timed_run():
+                nonlocal timing_record
+                timing_record = run_once(warmups + i)
+
+            elapsed = timed_call(timed_run)
             times.append(elapsed)
+            if collect_timing and timing_record:
+                timing_records.append(timing_record)
     except Exception as exc:
         return summarize(
             name=name,
@@ -176,6 +219,7 @@ def run_training_benchmark(
             times=times,
             status="failed",
             notes=f"{type(exc).__name__}: {exc}",
+            raw_timing_seconds=timing_records,
         )
 
     return summarize(
@@ -186,6 +230,7 @@ def run_training_benchmark(
         warmups=warmups,
         times=times,
         notes="median excludes warmup",
+        raw_timing_seconds=timing_records,
     )
 
 
@@ -207,8 +252,13 @@ def run_cuda_benchmark(args, dataset_name: str):
     return run_training_benchmark(
         name="MLP training",
         backend_label="MiniTorch CUDA",
-        trainer_factory=lambda hidden, batch_size: FastTrain(
-            hidden, backend=GPUBackend, batch_size=batch_size
+        trainer_factory=lambda hidden, batch_size, preload, evaluate, timing: FastTrain(
+            hidden,
+            backend=GPUBackend,
+            batch_size=batch_size,
+            preload_batches=preload,
+            evaluate=evaluate,
+            collect_timing=timing,
         ),
         dataset_name=dataset_name,
         points=args.points,
@@ -219,6 +269,9 @@ def run_cuda_benchmark(args, dataset_name: str):
         runs=args.runs,
         warmups=args.warmups,
         seed=args.seed,
+        preload_batches=args.preload_batches,
+        evaluate=not args.skip_eval,
+        collect_timing=args.collect_timing,
     )
 
 
@@ -238,8 +291,12 @@ def run_torch_benchmark(args, dataset_name: str):
     return run_training_benchmark(
         name="MLP training",
         backend_label="PyTorch CPU fair mini-batch",
-        trainer_factory=lambda hidden, batch_size: TorchTrain(
-            hidden, batch_size=batch_size
+        trainer_factory=lambda hidden, batch_size, preload, evaluate, timing: TorchTrain(
+            hidden,
+            batch_size=batch_size,
+            preload_batches=preload,
+            evaluate=evaluate,
+            collect_timing=timing,
         ),
         dataset_name=dataset_name,
         points=args.points,
@@ -250,14 +307,24 @@ def run_torch_benchmark(args, dataset_name: str):
         runs=args.runs,
         warmups=args.warmups,
         seed=args.seed,
+        preload_batches=args.preload_batches,
+        evaluate=not args.skip_eval,
+        collect_timing=args.collect_timing,
     )
 
 
 def training_config(args, dataset_name: str):
-    return (
+    config = (
         f"dataset={dataset_name}, points={args.points}, hidden={args.hidden}, "
         f"rate={args.rate}, epochs={args.epochs}, batch_size={args.batch_size}"
     )
+    if getattr(args, "preload_batches", False):
+        config += ", preload_batches=true"
+    if getattr(args, "skip_eval", False):
+        config += ", evaluate=false"
+    if getattr(args, "collect_timing", False):
+        config += ", collect_timing=true"
+    return config
 
 
 def markdown_seconds(value: float | None):
@@ -268,6 +335,45 @@ def markdown_seconds(value: float | None):
 
 def table_cell(value):
     return str(value).replace("|", "\\|").replace("\n", " ")
+
+
+def timing_breakdown_table(results: list[BenchmarkResult]):
+    if not any(result.median_timing_seconds for result in results):
+        return []
+
+    timing_keys = [
+        ("data_prepare_seconds", "Data Prep"),
+        ("forward_seconds", "Forward"),
+        ("backward_seconds", "Loss + Backward"),
+        ("optimizer_seconds", "Optimizer"),
+        ("evaluation_seconds", "Evaluation"),
+        ("total_epoch_seconds", "Epoch Total"),
+    ]
+    lines = [
+        "## Timing Breakdown",
+        "",
+        "Median cumulative timing per measured training run. This is most useful with `--collect-timing`, `--preload-batches`, and `--skip-eval` when comparing where training time goes.",
+        "",
+        "| Backend | Config | "
+        + " | ".join(label for _, label in timing_keys)
+        + " |",
+        "| --- | --- | "
+        + " | ".join("---:" for _ in timing_keys)
+        + " |",
+    ]
+
+    for result in results:
+        if not result.median_timing_seconds:
+            continue
+        cells = [
+            table_cell(result.backend),
+            table_cell(result.config),
+        ]
+        for key, _ in timing_keys:
+            cells.append(markdown_seconds(result.median_timing_seconds.get(key)))
+        lines.append("| " + " | ".join(cells) + " |")
+
+    return lines + [""]
 
 
 def gpu_discussion(results: list[BenchmarkResult]):
@@ -376,6 +482,7 @@ def format_markdown(results: list[BenchmarkResult], environment: dict):
         raw = ", ".join(f"{item:.4f}" for item in result.raw_seconds) or "N/A"
         lines.append(f"- {result.backend} ({result.config}): `{raw}`")
 
+    lines.extend([""] + timing_breakdown_table(results))
     lines.extend([""] + gpu_discussion(results))
 
     return "\n".join(lines) + "\n"
@@ -443,6 +550,21 @@ def parse_args():
         default="latest_unified_benchmark",
         help="Output file stem for markdown and JSON results.",
     )
+    parser.add_argument(
+        "--preload-batches",
+        action="store_true",
+        help="Create tensor batches once before timing each training run.",
+    )
+    parser.add_argument(
+        "--skip-eval",
+        action="store_true",
+        help="Skip periodic full-dataset evaluation during benchmark timing.",
+    )
+    parser.add_argument(
+        "--collect-timing",
+        action="store_true",
+        help="Record cumulative data/forward/backward/optimizer timing breakdowns.",
+    )
     return parser.parse_args()
 
 
@@ -463,8 +585,13 @@ def main():
             run_training_benchmark(
                 name="MLP training",
                 backend_label="MiniTorch fast CPU",
-                trainer_factory=lambda hidden, batch_size: FastTrain(
-                    hidden, backend=FastTensorBackend, batch_size=batch_size
+                trainer_factory=lambda hidden, batch_size, preload, evaluate, timing: FastTrain(
+                    hidden,
+                    backend=FastTensorBackend,
+                    batch_size=batch_size,
+                    preload_batches=preload,
+                    evaluate=evaluate,
+                    collect_timing=timing,
                 ),
                 dataset_name=dataset_name,
                 points=args.points,
@@ -475,6 +602,9 @@ def main():
                 runs=args.runs,
                 warmups=args.warmups,
                 seed=args.seed,
+                preload_batches=args.preload_batches,
+                evaluate=not args.skip_eval,
+                collect_timing=args.collect_timing,
             )
         )
 

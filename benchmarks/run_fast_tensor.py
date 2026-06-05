@@ -1,6 +1,7 @@
 import random
 import sys
 import time
+from collections import defaultdict
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +16,22 @@ from benchmarks.cuda_health import cuda_healthcheck, cuda_runtime_healthy
 FastTensorBackend = minitorch.TensorBackend(minitorch.FastOps)
 CUDA_HEALTH = cuda_healthcheck()
 GPUBackend = minitorch.TensorBackend(minitorch.CudaOps) if cuda_runtime_healthy() else None
+
+
+def sync_backend(backend):
+    if not getattr(backend, "cuda", False):
+        return
+
+    try:
+        from numba import cuda
+
+        cuda.synchronize()
+    except Exception:
+        pass
+
+
+def add_timing(timings, key, start):
+    timings[key] += time.perf_counter() - start
 
 
 def default_log_fn(epoch, total_loss, correct, losses, time_elapsed):
@@ -59,11 +76,23 @@ class Linear(minitorch.Module):
 
 
 class FastTrain:
-    def __init__(self, hidden_layers, backend=FastTensorBackend, batch_size=10):
+    def __init__(
+        self,
+        hidden_layers,
+        backend=FastTensorBackend,
+        batch_size=10,
+        preload_batches=False,
+        evaluate=True,
+        collect_timing=False,
+    ):
         self.hidden_layers = hidden_layers
         self.model = Network(hidden_layers, backend)
         self.backend = backend
         self.batch_size = batch_size
+        self.preload_batches = preload_batches
+        self.evaluate = evaluate
+        self.collect_timing = collect_timing
+        self.last_timing = {}
 
     def run_one(self, x):
         return self.model.forward(minitorch.tensor([x], backend=self.backend))
@@ -71,43 +100,94 @@ class FastTrain:
     def run_many(self, X):
         return self.model.forward(minitorch.tensor(X, backend=self.backend))
 
+    def make_tensor_batches(self, data):
+        examples = list(zip(data.X, data.y))
+        random.shuffle(examples)
+        X_shuf, y_shuf = zip(*examples)
+
+        batches = []
+        for i in range(0, len(X_shuf), self.batch_size):
+            X = minitorch.tensor(X_shuf[i : i + self.batch_size], backend=self.backend)
+            y = minitorch.tensor(y_shuf[i : i + self.batch_size], backend=self.backend)
+            batches.append((X, y))
+        sync_backend(self.backend)
+        return batches
+
     def train(self, data, learning_rate, max_epochs=500, log_fn=default_log_fn):
         self.model = Network(self.hidden_layers, self.backend)
         optim = minitorch.SGD(self.model.parameters(), learning_rate)
         batch = self.batch_size
         losses = []
         total_epoch_time = 0.0
+        timings = defaultdict(float)
+        preloaded_batches = None
+
+        if self.preload_batches:
+            start = time.perf_counter()
+            preloaded_batches = self.make_tensor_batches(data)
+            add_timing(timings, "data_prepare_seconds", start)
 
         for epoch in range(max_epochs):
             start_time = time.time()
             total_loss = 0.0
-            shuffled = list(zip(data.X, data.y))
-            random.shuffle(shuffled)
-            X_shuf, y_shuf = zip(*shuffled)
+            if preloaded_batches is None:
+                shuffled = list(zip(data.X, data.y))
+                random.shuffle(shuffled)
+                X_shuf, y_shuf = zip(*shuffled)
+                batch_iter = range(0, len(X_shuf), batch)
+            else:
+                batch_pairs = list(preloaded_batches)
+                random.shuffle(batch_pairs)
+                batch_iter = batch_pairs
 
-            for i in range(0, len(X_shuf), batch):
+            for item in batch_iter:
                 optim.zero_grad()
-                X = minitorch.tensor(X_shuf[i : i + batch], backend=self.backend)
-                y = minitorch.tensor(y_shuf[i : i + batch], backend=self.backend)
+                if preloaded_batches is None:
+                    i = item
+                    start = time.perf_counter()
+                    X = minitorch.tensor(X_shuf[i : i + batch], backend=self.backend)
+                    y = minitorch.tensor(y_shuf[i : i + batch], backend=self.backend)
+                    sync_backend(self.backend)
+                    add_timing(timings, "data_prepare_seconds", start)
+                else:
+                    X, y = item
 
+                start = time.perf_counter()
                 out = self.model.forward(X).view(y.shape[0])
+                sync_backend(self.backend)
+                add_timing(timings, "forward_seconds", start)
+
+                start = time.perf_counter()
                 prob = (out * y) + (out - 1.0) * (y - 1.0)
                 loss = -prob.log()
                 (loss / y.shape[0]).sum().view(1).backward()
                 total_loss = loss.sum().view(1)[0]
+                sync_backend(self.backend)
+                add_timing(timings, "backward_seconds", start)
+
+                start = time.perf_counter()
                 optim.step()
+                sync_backend(self.backend)
+                add_timing(timings, "optimizer_seconds", start)
 
             losses.append(total_loss)
             time_elapsed = time.time() - start_time
             total_epoch_time += time_elapsed
 
-            if epoch % 10 == 0 or epoch == max_epochs - 1:
+            if self.evaluate and (epoch % 10 == 0 or epoch == max_epochs - 1):
+                start = time.perf_counter()
                 X = minitorch.tensor(data.X, backend=self.backend)
                 y = minitorch.tensor(data.y, backend=self.backend)
                 out = self.model.forward(X).view(y.shape[0])
                 y2 = minitorch.tensor(data.y)
                 correct = int(((out.detach() > 0.5) == y2).sum()[0])
+                sync_backend(self.backend)
+                add_timing(timings, "evaluation_seconds", start)
                 log_fn(epoch, total_loss, correct, losses, time_elapsed)
+
+        timings["total_epoch_seconds"] = total_epoch_time
+        timings["epochs"] = max_epochs
+        self.last_timing = dict(timings) if self.collect_timing else {}
 
         print(
             "Average time per epoch: "
@@ -125,6 +205,8 @@ if __name__ == "__main__":
     parser.add_argument("--BACKEND", default="cpu", help="cpu or gpu")
     parser.add_argument("--DATASET", default="simple", help="simple, split, or xor")
     parser.add_argument("--BATCH", type=int, default=10, help="batch size")
+    parser.add_argument("--PRELOAD_BATCHES", action="store_true")
+    parser.add_argument("--SKIP_EVAL", action="store_true")
 
     args = parser.parse_args()
 
@@ -146,6 +228,10 @@ if __name__ == "__main__":
     else:
         backend = FastTensorBackend
 
-    FastTrain(args.HIDDEN, backend=backend, batch_size=args.BATCH).train(
-        data, args.RATE
-    )
+    FastTrain(
+        args.HIDDEN,
+        backend=backend,
+        batch_size=args.BATCH,
+        preload_batches=args.PRELOAD_BATCHES,
+        evaluate=not args.SKIP_EVAL,
+    ).train(data, args.RATE)
