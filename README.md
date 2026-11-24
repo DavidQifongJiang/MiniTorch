@@ -199,8 +199,9 @@ The November 2026 local verification passed 252 tests with four existing expecte
 failures; a separate CPU/CUDA run passed 163 backend/reference tests on the actual
 GPU. The installed wheel passed training, checkpoint evaluation, and benchmark
 smoke checks. See [verification details](docs/PERFORMANCE.md#local-verification).
-GitHub Actions is configured for Windows/Linux CPU and package checks; a remote
-CI run is still needed after pushing the change.
+GitHub Actions passed all five jobs on November 24, 2026: Windows/Linux CPU tests
+and installed-wheel checks on Python 3.11/3.12, plus PyTorch reference comparisons.
+See the [verified CI run](https://github.com/DavidQifongJiang/MiniTorch/actions/runs/45477282622).
 
 CUDA backend tests are opt-in so the default suite works on machines without a reliable CUDA context:
 

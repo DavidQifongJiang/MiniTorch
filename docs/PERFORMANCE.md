@@ -141,5 +141,16 @@ one warmup; thread counts are four. Sub-millisecond timings are noisy, so the
   it is not a generalization claim about real-world datasets.
   [Saved training and evaluation record](../benchmarks/results/training_demo_2026_11_12.json).
 
-The GitHub Actions workflow is configured for Windows/Linux CPU checks and package
-installation. It has not been run remotely as part of this local change.
+## GitHub verification — 2026-11-24
+
+The [GitHub Actions run](https://github.com/DavidQifongJiang/MiniTorch/actions/runs/45477282622)
+passed all five jobs for commit `4d62a7623bee9b85db09e799b9507ef403ca8eb3`:
+
+- Windows and Linux, each with Python 3.11 and 3.12: 250 passed, one skipped
+  optional PyTorch test module, and four existing expected failures per job.
+- All four platform jobs built the source distribution and wheel, installed the
+  wheel, and exercised training/checkpoint evaluation outside the source directory.
+- A separate PyTorch reference job passed both forward/backward/SGD comparison tests.
+
+Hosted CI validates CPU execution and packaging. Actual CUDA validation and
+performance measurements remain the local GPU results recorded above.
