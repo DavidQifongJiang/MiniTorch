@@ -1,0 +1,314 @@
+{
+  "environment": {
+    "captured_at_utc": "2026-11-12T18:08:56.420015+00:00",
+    "git_commit": "836e9e2b26905b8765a4a75c4852d15defac8b45",
+    "git_status": "M .gitignore\n M README.md\n M benchmarks/BENCHMARKS.md\n M benchmarks/parallel_check.py\n M benchmarks/run_fast_tensor.py\n M benchmarks/run_matmul_scaling.py\n M examples/mnist_cnn_demo.py\n M minitorch/__init__.py\n M minitorch/autodiff.py\n M minitorch/cuda_ops.py\n M minitorch/fast_ops.py\n M minitorch/nn.py\n M minitorch/optim.py\n M minitorch/scalar_functions.py\n M minitorch/tensor.py\n M minitorch/tensor_data.py\n M minitorch/tensor_functions.py\n M minitorch/tensor_ops.py\n M pyproject.toml\n M tests/test_nn.py\n?? .github/\n?? CONTRIBUTING.md\n?? benchmarks/prepare_baseline.py\n?? benchmarks/results/performance_after_2026_11_12.json\n?? benchmarks/results/performance_before_2026_11_12.json\n?? benchmarks/results/resume_audit_cuda_samples_2026_09_30.json\n?? docs/\n?? minitorch/__main__.py\n?? minitorch/benchmark.py\n?? minitorch/checkpoint.py\n?? minitorch/cli.py\n?? minitorch/models.py\n?? minitorch/training.py\n?? tests/test_checkpoint.py\n?? tests/test_mnist_demo.py\n?? tests/test_reference.py\n?? tests/test_runtime.py",
+    "python": "3.11.15 | packaged by conda-forge | (main, Mar  5 2026, 16:36:00) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "machine": "AMD64",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "packages": {
+      "minitorch": "installed",
+      "numpy": "2.4.6",
+      "numba": "0.65.1",
+      "torch": "2.12.0+cpu"
+    },
+    "cuda_health": {
+      "numba_cuda_available": true,
+      "runtime_healthy": true,
+      "device_name": "NVIDIA GeForce RTX 3070 Ti Laptop GPU",
+      "probe_result": 2.0,
+      "error": null
+    },
+    "nvidia_smi": "Thu Nov 12 13:08:56 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 581.80                 Driver Version: 581.80         CUDA Version: 13.0     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 3070 ...  WDDM  |   00000000:01:00.0 Off |                  N/A |\n| N/A   55C    P0             30W /  118W |    1281MiB /   8192MiB |      1%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A           36320      C   ...nvs\\minitorch-cuda\\python.exe      N/A      |\n+-----------------------------------------------------------------------------------------+",
+    "numba_threads": 4,
+    "torch_threads": 4
+  },
+  "results": [
+    {
+      "size": 32,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.00020599999993464735,
+      "mean_seconds": 0.00020085999999537308,
+      "min_seconds": 0.00015640000003713794,
+      "max_seconds": 0.00025870000001759763,
+      "raw_seconds": [
+        0.00025870000001759763,
+        0.00020599999993464735,
+        0.00021449999997003033,
+        0.0001687000000174521,
+        0.00015640000003713794
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 32,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0005540000000792134,
+      "mean_seconds": 0.0005941800000300645,
+      "min_seconds": 0.0005135000000109358,
+      "max_seconds": 0.0007829999999557913,
+      "raw_seconds": [
+        0.0007829999999557913,
+        0.0005885000000489526,
+        0.0005319000000554297,
+        0.0005540000000792134,
+        0.0005135000000109358
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 32,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 2.0199999994474638e-05,
+      "mean_seconds": 3.117999999631138e-05,
+      "min_seconds": 9.800000043469481e-06,
+      "max_seconds": 8.200000002034358e-05,
+      "raw_seconds": [
+        8.200000002034358e-05,
+        3.049999997983832e-05,
+        2.0199999994474638e-05,
+        1.3399999943430885e-05,
+        9.800000043469481e-06
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup; every output checked outside timing"
+    },
+    {
+      "size": 64,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0005773000000317552,
+      "mean_seconds": 0.0006645800000114832,
+      "min_seconds": 0.0003682999999909953,
+      "max_seconds": 0.0011160999999901833,
+      "raw_seconds": [
+        0.0008086000000275817,
+        0.0011160999999901833,
+        0.0005773000000317552,
+        0.0004526000000169006,
+        0.0003682999999909953
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 64,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0007006000000728818,
+      "mean_seconds": 0.0007258600000341175,
+      "min_seconds": 0.00055269999995744,
+      "max_seconds": 0.0008644000000685992,
+      "raw_seconds": [
+        0.00055269999995744,
+        0.000850200000058976,
+        0.0008644000000685992,
+        0.0006614000000126907,
+        0.0007006000000728818
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 64,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 9.009999996578699e-05,
+      "mean_seconds": 8.152000000336557e-05,
+      "min_seconds": 2.870000002985762e-05,
+      "max_seconds": 0.0001578999999765074,
+      "raw_seconds": [
+        9.009999996578699e-05,
+        0.0001578999999765074,
+        9.4600000011269e-05,
+        3.630000003340683e-05,
+        2.870000002985762e-05
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup; every output checked outside timing"
+    },
+    {
+      "size": 128,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0012833999999202206,
+      "mean_seconds": 0.001282020000007833,
+      "min_seconds": 0.0010679000000664018,
+      "max_seconds": 0.0016937000000325497,
+      "raw_seconds": [
+        0.0016937000000325497,
+        0.0012833999999202206,
+        0.001072200000066914,
+        0.0010679000000664018,
+        0.0012928999999530788
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 128,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0006389000000126543,
+      "mean_seconds": 0.0006957999999713139,
+      "min_seconds": 0.0005499999999756255,
+      "max_seconds": 0.0010590999999067208,
+      "raw_seconds": [
+        0.0006389000000126543,
+        0.0005895000000464279,
+        0.0005499999999756255,
+        0.0006414999999151405,
+        0.0010590999999067208
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 128,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0001068000000259417,
+      "mean_seconds": 0.00010878000005050125,
+      "min_seconds": 9.200000010878284e-05,
+      "max_seconds": 0.0001234000000067681,
+      "raw_seconds": [
+        0.0001234000000067681,
+        0.00012260000005426264,
+        9.200000010878284e-05,
+        0.0001068000000259417,
+        9.910000005675101e-05
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup; every output checked outside timing"
+    },
+    {
+      "size": 256,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.008192900000040026,
+      "mean_seconds": 0.008323240000026998,
+      "min_seconds": 0.007893100000046616,
+      "max_seconds": 0.00894220000009227,
+      "raw_seconds": [
+        0.00894220000009227,
+        0.008192900000040026,
+        0.007893100000046616,
+        0.008574899999985064,
+        0.008013099999971018
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 256,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0012571000000889399,
+      "mean_seconds": 0.0014492599999812229,
+      "min_seconds": 0.0011567000000241023,
+      "max_seconds": 0.002016399999888563,
+      "raw_seconds": [
+        0.0012571000000889399,
+        0.0011567000000241023,
+        0.002016399999888563,
+        0.0015650999999934356,
+        0.0012509999999110732
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 256,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0004301999999825057,
+      "mean_seconds": 0.0004540199999837569,
+      "min_seconds": 0.0003143999999792868,
+      "max_seconds": 0.000692599999979393,
+      "raw_seconds": [
+        0.0003143999999792868,
+        0.000692599999979393,
+        0.0004301999999825057,
+        0.0003902999999354506,
+        0.00044260000004214817
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup; every output checked outside timing"
+    },
+    {
+      "size": 512,
+      "backend": "MiniTorch fast CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.10920480000004318,
+      "mean_seconds": 0.11001051999999163,
+      "min_seconds": 0.10552719999998317,
+      "max_seconds": 0.11607949999995526,
+      "raw_seconds": [
+        0.10920390000001134,
+        0.11607949999995526,
+        0.10920480000004318,
+        0.1100371999999652,
+        0.10552719999998317
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 512,
+      "backend": "MiniTorch CUDA",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.003959099999974569,
+      "mean_seconds": 0.003940299999976559,
+      "min_seconds": 0.003819700000008197,
+      "max_seconds": 0.004035599999951955,
+      "raw_seconds": [
+        0.0038905999999769847,
+        0.003819700000008197,
+        0.004035599999951955,
+        0.003996499999971093,
+        0.003959099999974569
+      ],
+      "status": "ok",
+      "notes": "preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing"
+    },
+    {
+      "size": 512,
+      "backend": "PyTorch CPU",
+      "runs": 5,
+      "warmups": 1,
+      "median_seconds": 0.0018360999999913474,
+      "mean_seconds": 0.0020758999999998195,
+      "min_seconds": 0.0016405000000077052,
+      "max_seconds": 0.0025696000000152708,
+      "raw_seconds": [
+        0.0018360999999913474,
+        0.0018221999999923355,
+        0.0016405000000077052,
+        0.002511099999992439,
+        0.0025696000000152708
+      ],
+      "status": "ok",
+      "notes": "preloaded tensors; median excludes warmup; every output checked outside timing"
+    }
+  ]
+}

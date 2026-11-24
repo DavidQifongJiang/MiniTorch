@@ -8,6 +8,7 @@ from typing_extensions import Protocol
 from minitorch import operators
 from minitorch.tensor_data import (
     MAX_DIMS,
+    TensorData,
     broadcast_index,
     index_to_position,
     shape_broadcast,
@@ -102,6 +103,7 @@ class TensorBackend:
         # Reduce
         self.add_reduce = ops.reduce(operators.add, 0.0)
         self.mul_reduce = ops.reduce(operators.mul, 1.0)
+        self.max_reduce = ops.reduce(operators.max, float("-inf"))
         self.matrix_multiply = ops.matrix_multiply
         self.cuda = ops.cuda
 
@@ -234,12 +236,31 @@ class SimpleOps(TensorOps):
     @staticmethod
     def matrix_multiply(a: "Tensor", b: "Tensor") -> "Tensor":
         """Matrix multiplication"""
-        raise NotImplementedError("Not implemented in this assignment")
+        a, b, shape, both_2d = prepare_matmul(a, b)
+        left = a.contiguous().view(a.shape[0], a.shape[1], a.shape[2], 1)
+        right = b.contiguous().view(b.shape[0], 1, b.shape[1], b.shape[2])
+        out = (left * right).sum(2).view(*shape)
+        return out.view(shape[1], shape[2]) if both_2d else out
 
     is_cuda = False
 
 
 # Implementations.
+
+
+def prepare_matmul(a, b):
+    """Promote 2D matrices by metadata only, preserving transposed strides."""
+    if len(a.shape) not in (2, 3) or len(b.shape) not in (2, 3):
+        raise ValueError("Matrix multiplication supports 2D or 3D tensors")
+    if a.shape[-1] != b.shape[-2]:
+        raise ValueError("Matrix multiplication inner dimensions must match")
+    both_2d = len(a.shape) == len(b.shape) == 2
+    if len(a.shape) == 2:
+        a = a._new(TensorData(a._tensor._storage, (1,) + a.shape, (0,) + a._tensor.strides))
+    if len(b.shape) == 2:
+        b = b._new(TensorData(b._tensor._storage, (1,) + b.shape, (0,) + b._tensor.strides))
+    shape = tuple(shape_broadcast(a.shape[:-2], b.shape[:-2])) + (a.shape[-2], b.shape[-1])
+    return a, b, shape, both_2d
 
 
 def tensor_map(

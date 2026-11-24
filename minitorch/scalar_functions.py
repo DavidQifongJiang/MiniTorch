@@ -6,7 +6,7 @@ from abc import abstractmethod
 import minitorch
 
 from minitorch import operators
-from minitorch.autodiff import Context
+from minitorch.autodiff import Context, is_grad_enabled
 
 if TYPE_CHECKING:
     from typing import Tuple
@@ -61,14 +61,14 @@ class ScalarFunction:
                 raw_vals.append(v)
 
         # Create the context.
-        ctx = Context(False)
+        ctx = Context(not is_grad_enabled())
 
         # Call forward with the variables.
         c = cls._forward(ctx, *raw_vals)
         assert isinstance(c, float), "Expected return type float got %s" % (type(c))
 
         # Create a new variable from the result with a new history.
-        back = minitorch.scalar.ScalarHistory(cls, ctx, scalars)
+        back = minitorch.scalar.ScalarHistory(cls, ctx, scalars) if is_grad_enabled() else None
         return minitorch.scalar.Scalar(c, back)
 
 

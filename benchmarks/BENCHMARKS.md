@@ -2,6 +2,19 @@
 
 MiniTorch benchmarks should be reported from one standard environment. The purpose is to make performance claims reproducible enough for engineering discussion instead of treating benchmark numbers as one-off screenshots.
 
+## Current matched training benchmark
+
+Use `minitorch benchmark --backends cpu cuda torch --output artifacts/benchmark.json`
+for new training comparisons. Its float64 workload, matched initialization/SGD,
+four-thread default, parameter validation, and source fingerprints are documented
+in [the current report](../docs/PERFORMANCE.md). The older `run_all.py` results
+below use a different protocol and must not be mixed into the new before/after ratio.
+Three measured runs after one warmup are used for the scaled 10k-point comparison.
+
+The matrix scaling script now validates every output outside timing, synchronizes
+CUDA, and suppresses timing claims for failed validation. Its timer includes Python
+dispatch and output allocation; it is not a pure GPU kernel timer.
+
 ## Standard Benchmark Environment
 
 Use this machine as the primary benchmark target unless a result explicitly says otherwise:

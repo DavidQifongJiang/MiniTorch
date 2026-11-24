@@ -2,6 +2,7 @@ from typing import Sequence
 
 from .module import Parameter
 from .scalar import Scalar
+from .autodiff import no_grad
 
 
 class Optimizer:
@@ -40,4 +41,5 @@ class SGD(Optimizer):
                     p.update(Scalar(p.value.data - self.lr * p.value.derivative))
             elif hasattr(p.value, "grad"):
                 if p.value.grad is not None:
-                    p.update(p.value - self.lr * p.value.grad)
+                    with no_grad():
+                        p.update((p.value - self.lr * p.value.grad).detach())

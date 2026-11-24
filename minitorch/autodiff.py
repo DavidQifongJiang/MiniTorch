@@ -1,7 +1,27 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Any, Iterable, Tuple, Protocol
+
+
+_grad_enabled = ContextVar("minitorch_grad_enabled", default=True)
+
+
+def is_grad_enabled() -> bool:
+    """Whether operations in this context should record an autodiff graph."""
+    return _grad_enabled.get()
+
+
+@contextmanager
+def no_grad():
+    """Disable graph recording, with nested and exception-safe restoration."""
+    token = _grad_enabled.set(False)
+    try:
+        yield
+    finally:
+        _grad_enabled.reset(token)
 
 
 # ## Task 1.1
@@ -131,6 +151,8 @@ def backpropagate(variable: Variable, deriv: Any = 1.0) -> None:
             var.accumulate_derivative(derivatives.get(var_id, 0))
         else:
             for parent, parent_deriv in var.chain_rule(derivatives.get(var_id, 0)):
+                if parent.is_constant():
+                    continue
                 parent_id = id(parent)
                 if parent_id in derivatives:
                     derivatives[parent_id] += parent_deriv

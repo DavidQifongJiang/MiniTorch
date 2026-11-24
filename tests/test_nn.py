@@ -38,8 +38,12 @@ def test_max(t: Tensor) -> None:
     assert out[0, 0, 0] == max(t[0, i, 0] for i in range(3))
     out = minitorch.nn.max(t, 0)
     assert out[0, 0, 0] == max(t[i, 0, 0] for i in range(2))
-    rand_tensor = minitorch.rand(t.shape) * 1e-5
-    t = t + rand_tensor
+    # A tiny random perturbation can still leave maxima closer than the finite
+    # difference epsilon. Give each slice a unique maximum with a safe margin.
+    t = t.detach()
+    for batch in range(t.shape[0]):
+        for channel in range(t.shape[1]):
+            t[batch, channel, 0] = max(t[batch, channel, i] for i in range(t.shape[2])) + 1.0
     minitorch.grad_check(lambda t: minitorch.nn.max(t, 2), t)
 
 

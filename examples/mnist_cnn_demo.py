@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 
-from mnist import MNIST
-
 import minitorch
 
 DATA_DIR = Path(os.getenv("MINITORCH_DATA_DIR", "data"))
@@ -10,6 +8,8 @@ _MNIST_CACHE = None
 
 
 def load_mnist_training():
+    from mnist import MNIST
+
     global _MNIST_CACHE
     if _MNIST_CACHE is None:
         mndata = MNIST(str(DATA_DIR))
@@ -91,8 +91,8 @@ class Network(minitorch.Module):
         x = self.conv2(x).relu()
         self.out = x
         x = minitorch.avgpool2d(x, (4, 4))
-        x = self.linear1(x.view(BATCH, 392)).relu()
-        x = minitorch.dropout(x, 0.25, self.mode == "eval")
+        x = self.linear1(x.view(x.shape[0], 392)).relu()
+        x = minitorch.dropout(x, 0.25, ignore=not self.training)
         x = self.linear2(x)
         x = minitorch.logsoftmax(x, dim=1)
         return x
@@ -120,7 +120,9 @@ class ImageTrain:
         self.model = Network()
 
     def run_one(self, x):
-        return self.model.forward(minitorch.tensor([x], backend=BACKEND))
+        self.model.eval()
+        with minitorch.no_grad():
+            return self.model(minitorch.tensor([x], backend=BACKEND).view(1, 1, H, W))
 
     def train(
         self, data_train, data_val, learning_rate, max_epochs=500, log_fn=default_log_fn
@@ -139,18 +141,16 @@ class ImageTrain:
             for batch_num, example_num in enumerate(
                 range(0, n_training_samples, BATCH)
             ):
-                if n_training_samples - example_num <= BATCH:
-                    continue
+                batch = min(BATCH, n_training_samples - example_num)
+                optim.zero_grad()
                 y = minitorch.tensor(
                     y_train[example_num : example_num + BATCH], backend=BACKEND
                 )
                 x = minitorch.tensor(
                     X_train[example_num : example_num + BATCH], backend=BACKEND
                 )
-                x.requires_grad_(True)
-                y.requires_grad_(True)
                 # Forward
-                out = model.forward(x.view(BATCH, 1, H, W)).view(BATCH, C)
+                out = model.forward(x.view(batch, 1, H, W)).view(batch, C)
                 prob = (out * y).sum(1)
                 loss = -(prob / y.shape[0]).sum()
 
@@ -165,10 +165,11 @@ class ImageTrain:
 
                 if batch_num % 5 == 0:
                     model.eval()
-                    # Evaluate on 5 held-out batches
+                    # Evaluate every held-out example, including partial batches.
 
                     correct = 0
-                    for val_example_num in range(0, 1 * BATCH, BATCH):
+                    for val_example_num in range(0, len(X_val), BATCH):
+                        val_batch = min(BATCH, len(X_val) - val_example_num)
                         y = minitorch.tensor(
                             y_val[val_example_num : val_example_num + BATCH],
                             backend=BACKEND,
@@ -177,8 +178,9 @@ class ImageTrain:
                             X_val[val_example_num : val_example_num + BATCH],
                             backend=BACKEND,
                         )
-                        out = model.forward(x.view(BATCH, 1, H, W)).view(BATCH, C)
-                        for i in range(BATCH):
+                        with minitorch.no_grad():
+                            out = model.forward(x.view(val_batch, 1, H, W)).view(val_batch, C)
+                        for i in range(val_batch):
                             m = -1000
                             ind = -1
                             for j in range(C):
@@ -187,7 +189,7 @@ class ImageTrain:
                                     m = out[i, j]
                             if y[i, ind] == 1.0:
                                 correct += 1
-                    log_fn(epoch, total_loss, correct, BATCH, losses, model)
+                    log_fn(epoch, total_loss, correct, len(X_val), losses, model)
 
                     total_loss = 0.0
                     model.train()

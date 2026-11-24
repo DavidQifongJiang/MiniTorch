@@ -1,0 +1,40 @@
+name: Tests and package
+on: [push, pull_request]
+
+jobs:
+  cpu:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    env:
+      NUMBA_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest -q
+      - run: python -m build
+      - run: python -m pip install --force-reinstall --no-deps dist/minitorch-0.6.0-py3-none-any.whl
+      - name: Smoke test installed package outside the source directory
+        working-directory: ${{ runner.temp }}
+        run: |
+          minitorch --help
+          minitorch train --points 32 --epochs 1 --hidden 4 --checkpoint smoke.npz
+          minitorch evaluate smoke.npz --points 32
+  reference:
+    runs-on: ubuntu-latest
+    env:
+      NUMBA_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e ".[dev,benchmark]"
+      - run: python -m pytest -q tests/test_reference.py

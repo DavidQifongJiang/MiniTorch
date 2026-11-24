@@ -4,7 +4,31 @@ build-backend = "hatchling.build"
 
 [project]
 name = "minitorch"
-version = "0.5"
+version = "0.6.0"
+description = "An educational autodiff and tensor runtime with CPU/CUDA kernels and reproducible training tools"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = ["numpy>=1.24,<3", "numba>=0.60,<0.66", "typing_extensions>=4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "hypothesis>=6.54", "build>=1", "ruff>=0.9"]
+benchmark = ["torch>=2.2"]
+cuda = ["numba-cuda>=0.4; platform_system != 'Darwin'"]
+demo = ["python-mnist>=0.7"]
+
+[project.scripts]
+minitorch = "minitorch.cli:main"
+
+[project.urls]
+Repository = "https://github.com/DavidQifongJiang/MiniTorch"
+Curriculum = "https://minitorch.github.io/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["minitorch"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/minitorch", "/tests", "/examples", "/benchmarks", "/docs", "/.github/workflows", "/CONTRIBUTING.md", "/README.md", "/LICENSE", "/pyproject.toml"]
 
 [tool.pyright]
 include = ["**/minitorch"]

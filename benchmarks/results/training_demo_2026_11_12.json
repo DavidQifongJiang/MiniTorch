@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "package_version": "0.6.0",
+  "execution": "Installed wheel in a separate virtual environment, outside the source tree; existing runtime dependencies reused.",
+  "training": {
+    "dataset": "xor",
+    "points": 1000,
+    "hidden": 16,
+    "epochs": 100,
+    "batch_size": 64,
+    "learning_rate": 0.1,
+    "seed": 1337,
+    "validation_seed": 1338,
+    "validation_points": 1000,
+    "backend": "cpu",
+    "dtype": "float64",
+    "history": [
+      {
+        "epoch": 1,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.504,
+          "loss": 0.6993922695246685
+        }
+      },
+      {
+        "epoch": 10,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.645,
+          "loss": 0.6720138311028083
+        }
+      },
+      {
+        "epoch": 20,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.683,
+          "loss": 0.618792556128204
+        }
+      },
+      {
+        "epoch": 30,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.831,
+          "loss": 0.4773415887770401
+        }
+      },
+      {
+        "epoch": 40,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.912,
+          "loss": 0.29367167723351517
+        }
+      },
+      {
+        "epoch": 50,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.949,
+          "loss": 0.1919490135812777
+        }
+      },
+      {
+        "epoch": 60,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.969,
+          "loss": 0.1442650178794617
+        }
+      },
+      {
+        "epoch": 70,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.961,
+          "loss": 0.12272442329082664
+        }
+      },
+      {
+        "epoch": 80,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.97,
+          "loss": 0.10477260131749556
+        }
+      },
+      {
+        "epoch": 90,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.984,
+          "loss": 0.08449122410598077
+        }
+      },
+      {
+        "epoch": 100,
+        "validation": {
+          "examples": 1000,
+          "accuracy": 0.987,
+          "loss": 0.07820881350636875
+        }
+      }
+    ],
+    "elapsed_seconds_including_compilation_and_validation": 6.83904050000001
+  },
+  "test_cpu": {
+    "seed": 1339,
+    "dataset": "xor",
+    "examples": 1000,
+    "accuracy": 0.99,
+    "loss": 0.07465901780019096
+  },
+  "test_cuda": {
+    "seed": 1339,
+    "dataset": "xor",
+    "examples": 1000,
+    "accuracy": 0.99,
+    "loss": 0.07465901780019095
+  },
+  "scope": "Single-seed synthetic XOR demonstration; no MNIST accuracy or general model-quality claim."
+}

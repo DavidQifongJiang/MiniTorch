@@ -2,9 +2,8 @@ from typing import Tuple
 
 from . import operators
 from .autodiff import Context
-from .fast_ops import FastOps
 from .tensor import Tensor
-from .tensor_functions import Function, rand
+from .tensor_functions import Function, rand, tensor
 
 
 # List of functions in this file:
@@ -68,15 +67,12 @@ def avgpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
     return t
 
 
-max_reduce = FastOps.reduce(operators.max, -1e9)
-
-
 class Max(Function):
     @staticmethod
     def forward(ctx: Context, input: Tensor, dim: Tensor) -> Tensor:
         """Forward of max should be max reduction"""
         # TODO: Implement for Task 4.4.
-        max_red = max_reduce(input, int(dim.item()))
+        max_red = input.backend.max_reduce(input, int(dim.item()))
         ctx.save_for_backward(input, max_red)
         return max_red
 
@@ -101,7 +97,11 @@ def max(input: Tensor, dim: int) -> Tensor:
         Tensor: A tensor containing the maximum values along the specified dimension.
 
     """
-    return Max.apply(input, input._ensure_tensor(dim))
+    if dim < 0:
+        dim += len(input.shape)
+    if dim < 0 or dim >= len(input.shape):
+        raise IndexError("Reduction dimension is out of range")
+    return Max.apply(input, tensor([dim]))
 
 
 def softmax(input: Tensor, dim: int) -> Tensor:
@@ -122,7 +122,7 @@ def softmax(input: Tensor, dim: int) -> Tensor:
 
     """
     # TODO: Implement for Task 4.4.
-    t = input.exp()
+    t = (input - max(input.detach(), dim)).exp()
     s = t.sum(dim)
     return t / s
 
@@ -145,10 +145,11 @@ def logsoftmax(input: Tensor, dim: int) -> Tensor:
 
     """
     # TODO: Implement for Task 4.4.
-    t = input.exp()
+    shifted = input - max(input.detach(), dim)
+    t = shifted.exp()
     t = t.sum(dim)
     t = t.log()
-    return input - t
+    return shifted - t
 
 
 def maxpool2d(input: Tensor, kernel: Tuple[int, int]) -> Tensor:
@@ -187,9 +188,11 @@ def dropout(input: Tensor, rate: float, ignore: bool = False) -> Tensor:
 
     """
     # TODO: Implement for Task 4.4.
-    if not ignore:
-        rand_tensor = rand(input.shape)
-        random_drop = rand_tensor > rate
-        return input * random_drop
-    else:
+    if not 0.0 <= rate <= 1.0:
+        raise ValueError("Dropout rate must be between 0 and 1")
+    if ignore or rate == 0.0:
         return input
+    if rate == 1.0:
+        return input * 0.0
+    random_drop = rand(input.shape, backend=input.backend) > rate
+    return input * random_drop / (1.0 - rate)

@@ -7,6 +7,9 @@ import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+import numpy as np
+import numba
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -100,12 +103,9 @@ def summarize(
 
 
 def sync_cuda() -> None:
-    try:
-        from numba import cuda
+    from numba import cuda
 
-        cuda.synchronize()
-    except Exception:
-        pass
+    cuda.synchronize()
 
 
 def benchmark_minitorch(size: int, backend_name: str, backend, args) -> MatmulResult:
@@ -115,27 +115,31 @@ def benchmark_minitorch(size: int, backend_name: str, backend, args) -> MatmulRe
         sync_cuda()
 
     times: list[float] = []
+    values = np.asarray(make_matrix(size), dtype=np.float64)
+    expected = np.einsum("ik,kj->ij", values, values)
 
-    def run_once() -> None:
-        _ = left @ right
+    def run_once():
+        result = left @ right
         if backend_name == "MiniTorch CUDA":
             sync_cuda()
+        return result
 
     try:
         for _ in range(args.warmups):
-            run_once()
+            np.testing.assert_allclose(run_once().to_numpy(), expected, rtol=1e-9, atol=1e-9)
 
         for _ in range(args.runs):
             start = time.perf_counter()
-            run_once()
+            result = run_once()
             times.append(time.perf_counter() - start)
+            np.testing.assert_allclose(result.to_numpy(), expected, rtol=1e-9, atol=1e-9)
     except Exception as exc:
         return summarize(
             size=size,
             backend=backend_name,
             runs=args.runs,
             warmups=args.warmups,
-            times=times,
+            times=[],
             status="failed",
             notes=f"{type(exc).__name__}: {exc}",
         )
@@ -146,7 +150,7 @@ def benchmark_minitorch(size: int, backend_name: str, backend, args) -> MatmulRe
         runs=args.runs,
         warmups=args.warmups,
         times=times,
-        notes="preloaded tensors; construction and host/device transfer excluded",
+        notes="preloaded inputs; synchronized operation includes dispatch/allocation; every output checked outside timing",
     )
 
 
@@ -165,22 +169,25 @@ def benchmark_torch(size: int, args) -> MatmulResult:
     left = torch.tensor(make_matrix(size), dtype=torch.float64)
     right = torch.tensor(make_matrix(size), dtype=torch.float64)
     times: list[float] = []
+    values = np.asarray(make_matrix(size), dtype=np.float64)
+    expected = np.einsum("ik,kj->ij", values, values)
 
     try:
         for _ in range(args.warmups):
-            _ = left @ right
+            np.testing.assert_allclose((left @ right).tolist(), expected, rtol=1e-9, atol=1e-9)
 
         for _ in range(args.runs):
             start = time.perf_counter()
-            _ = left @ right
+            result = left @ right
             times.append(time.perf_counter() - start)
+            np.testing.assert_allclose(result.tolist(), expected, rtol=1e-9, atol=1e-9)
     except Exception as exc:
         return summarize(
             size=size,
             backend="PyTorch CPU",
             runs=args.runs,
             warmups=args.warmups,
-            times=times,
+            times=[],
             status="failed",
             notes=f"{type(exc).__name__}: {exc}",
         )
@@ -191,7 +198,7 @@ def benchmark_torch(size: int, args) -> MatmulResult:
         runs=args.runs,
         warmups=args.warmups,
         times=times,
-        notes="preloaded tensors; median excludes warmup",
+        notes="preloaded tensors; median excludes warmup; every output checked outside timing",
     )
 
 
@@ -210,7 +217,8 @@ def format_markdown(results: list[MatmulResult], environment: dict) -> str:
         "# MiniTorch Matrix Multiply Scaling Benchmark",
         "",
         "This benchmark times preloaded square matrix multiplication across increasing sizes.",
-        "Tensor construction and host/device transfer are excluded so the result focuses on backend compute behavior.",
+        "Input construction and validation are outside timing; dispatch, output allocation, and CUDA synchronization are included.",
+        "Every output is checked against NumPy einsum; a failed validation produces no timing claim.",
         "",
         "## Environment",
         "",
@@ -321,6 +329,7 @@ def parse_args():
     parser.add_argument("--runs", type=int, default=5)
     parser.add_argument("--warmups", type=int, default=1)
     parser.add_argument("--seed", type=int, default=1337)
+    parser.add_argument("--threads", type=int, default=4)
     parser.add_argument("--include-cuda", action="store_true")
     parser.add_argument("--include-torch", action="store_true")
     parser.add_argument("--output-dir", default="benchmarks/results")
@@ -333,6 +342,11 @@ def parse_args():
 
 def main() -> None:
     args = parse_args()
+    if min(args.runs, args.warmups, args.threads, *args.sizes) < 1:
+        raise ValueError("sizes, runs, warmups and threads must be positive")
+    numba.set_num_threads(args.threads)
+    if torch is not None:
+        torch.set_num_threads(args.threads)
     set_seed(args.seed)
 
     results: list[MatmulResult] = []
@@ -359,6 +373,8 @@ def main() -> None:
             results.append(benchmark_torch(size, args))
 
     environment = collect_environment()
+    environment["numba_threads"] = numba.get_num_threads()
+    environment["torch_threads"] = torch.get_num_threads() if torch is not None else None
     markdown_path, json_path = write_outputs(args, results, environment)
 
     print(format_markdown(results, environment))

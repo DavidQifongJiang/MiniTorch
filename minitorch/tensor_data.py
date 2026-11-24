@@ -179,7 +179,7 @@ class TensorData:
         shape: UserShape,
         strides: Optional[UserStrides] = None,
     ):
-        if isinstance(storage, np.ndarray):
+        if isinstance(storage, np.ndarray) or hasattr(storage, "__cuda_array_interface__") or hasattr(storage, "copy_to_host"):
             self._storage = storage
         else:
             self._storage = array(storage, dtype=float64)
@@ -212,11 +212,11 @@ class TensorData:
             bool : True if contiguous
 
         """
-        last = 1e9
-        for stride in self._strides:
-            if stride > last:
+        expected = 1
+        for size, stride in zip(reversed(self.shape), reversed(self.strides)):
+            if size != 1 and stride != expected:
                 return False
-            last = stride
+            expected *= size
         return True
 
     @staticmethod
@@ -271,6 +271,10 @@ class TensorData:
 
     def tuple(self) -> Tuple[Storage, Shape, Strides]:
         """Return core tensor data as a tuple."""
+        if hasattr(self._storage, "copy_to_host"):
+            # Small metadata tuples are passed by value to CUDA kernels, avoiding
+            # implicit host/device array copies on every operation.
+            return (self._storage, self.shape, tuple(int(s) for s in self.strides))
         return (self._storage, self._shape, self._strides)
 
     def permute(self, *order: int) -> TensorData:

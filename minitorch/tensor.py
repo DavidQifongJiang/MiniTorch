@@ -84,6 +84,8 @@ class Tensor:
         assert isinstance(v, TensorData)
         assert backend is not None
         self._tensor = v
+        if backend.cuda:
+            self._tensor.to_cuda_()
         self.history = back
         self.backend = backend
         self.grad = None
@@ -114,7 +116,9 @@ class Tensor:
         None
 
         """
-        self.history = History()
+        self.history = History() if x else None
+        if not x:
+            self.grad = None
 
     def requires_grad(self) -> bool:
         """Sets whether this tensor requires gradient computation.
@@ -135,7 +139,10 @@ class Tensor:
         Converted to numpy array
 
         """
-        return self.contiguous()._tensor._storage.reshape(self.shape)
+        storage = self.detach().contiguous()._tensor._storage
+        if hasattr(storage, "copy_to_host"):
+            storage = storage.copy_to_host()
+        return np.asarray(storage).reshape(self.shape)
 
     def _ensure_tensor(self, b: TensorLike) -> Tensor:
         """Turns a python number into a tensor with the same backend."""
@@ -154,7 +161,7 @@ class Tensor:
 
     def contiguous(self) -> Tensor:
         """Return a contiguous tensor with the same data"""
-        return Copy.apply(self)
+        return self if self._tensor.is_contiguous() else Copy.apply(self)
 
     def __repr__(self) -> str:
         return self._tensor.to_string()
@@ -170,8 +177,11 @@ class Tensor:
     # Internal methods used for autodiff.
     def _type_(self, backend: TensorBackend) -> None:
         self.backend = backend
+        self.f = backend
         if backend.cuda:  # pragma: no cover
             self._tensor.to_cuda_()
+        elif hasattr(self._tensor._storage, "copy_to_host"):
+            self._tensor = TensorData(self._tensor._storage.copy_to_host(), self.shape, self._tensor.strides)
 
     def _new(self, tensor_data: TensorData) -> Tensor:
         return Tensor(tensor_data, backend=self.backend)
@@ -223,6 +233,16 @@ class Tensor:
         return Tensor.make(out._tensor._storage, self.shape, backend=self.backend)
         # END CODE CHANGE (2021)
 
+    def empty(self, shape: UserShape) -> Tensor:
+        """Allocate uninitialized output storage directly on the selected device."""
+        size = int(operators.prod(shape))
+        if self.backend.cuda:
+            from numba import cuda
+            storage = cuda.device_array(size, dtype=np.float64)
+        else:
+            storage = np.empty(size, dtype=np.float64)
+        return Tensor.make(storage, shape, backend=self.backend)
+
     def zeros(self, shape: Optional[UserShape] = None) -> Tensor:
         """Returns a tensor filled with zeros of the specified shape.
 
@@ -237,16 +257,12 @@ class Tensor:
 
         """
 
-        def zero(shape: UserShape) -> Tensor:
-            return Tensor.make(
-                [0.0] * int(operators.prod(shape)), shape, backend=self.backend
-            )
-
-        if shape is None:
-            out = zero(self.shape)
-        else:
-            out = zero(shape)
-        out._type_(self.backend)
+        shape = self.shape if shape is None else shape
+        if not self.backend.cuda:
+            return Tensor.make(np.zeros(int(operators.prod(shape))), shape, backend=self.backend)
+        from .cuda_ops import fill_storage
+        out = self.empty(shape)
+        fill_storage(out._tensor._storage, 0.0)
         return out
 
     def tuple(self) -> Tuple[Storage, Shape, Strides]:
@@ -270,12 +286,9 @@ class Tensor:
         """
         assert self.is_leaf(), "Only leaf variables can have derivatives."
         if self.grad is None:
-            self.grad = Tensor.make(
-                [0.0] * int(operators.prod(self.shape)),
-                self.shape,
-                backend=self.backend,
-            )
-        self.grad += x
+            self.grad = x.detach()
+        else:
+            self.grad = self.grad + x
 
     def is_leaf(self) -> bool:
         """True if this variable created by the user (no `last_fn`)"""
@@ -318,6 +331,7 @@ class Tensor:
         return [
             (inp, inp.expand(self._ensure_tensor(d_in)))
             for inp, d_in in zip(h.inputs, x)
+            if not inp.is_constant()
         ]
 
     def backward(self, grad_output: Optional[Tensor] = None) -> None:
@@ -416,9 +430,13 @@ class Tensor:
     def sum(self, dim: Optional[int] = None) -> Tensor:
         """Computes the sum of tensor elements."""
         if dim is None:
-            return Sum.apply(self.contiguous().view(self.size), self._ensure_tensor(0))
+            return Sum.apply(self.contiguous().view(self.size), tensor([0]))
         else:
-            return Sum.apply(self, self._ensure_tensor(dim))
+            if dim < 0:
+                dim += len(self.shape)
+            if dim < 0 or dim >= len(self.shape):
+                raise IndexError("Reduction dimension is out of range")
+            return Sum.apply(self, tensor([dim]))
 
     def mean(self, dim: Optional[int] = None) -> Tensor:
         """Computes the mean of tensor elements."""

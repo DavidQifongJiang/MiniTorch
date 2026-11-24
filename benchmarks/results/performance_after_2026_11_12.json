@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "label": "after",
+  "captured_at_utc": "2026-11-12T18:05:57.912567+00:00",
+  "config": {
+    "points": 10000,
+    "hidden": 64,
+    "batch_size": 1000,
+    "epochs": 3,
+    "runs": 3,
+    "warmups": 1,
+    "threads": 4,
+    "seed": 1337,
+    "learning_rate": 0.05,
+    "dtype": "float64",
+    "linear_implementation": "matmul",
+    "dataset": "xor"
+  },
+  "methodology": "Identical initial weights, preloaded batches, batch order, mean BCE (+1e-6), and SGD; inputs do not request gradients. Construction, warmups, validation and reporting excluded; CUDA synchronized at timing boundaries. Final parameters and loss checked against eager PyTorch CPU on every run. Fixed steps, not time to convergence.",
+  "environment": {
+    "python": "3.11.15",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+    "packages": {
+      "numpy": "2.4.6",
+      "numba": "0.65.1",
+      "numba-cuda": "0.30.2",
+      "torch": "2.12.0+cpu"
+    },
+    "numba_threads": 4,
+    "torch_threads": 4,
+    "git_commit": "836e9e2b26905b8765a4a75c4852d15defac8b45",
+    "git_dirty": true,
+    "python_source_sha256": "b4e19459fae8c0cc1c63daa1d5e4d8e1d7e54ba4e5ccd23341f9e9f0580e0793",
+    "cuda_device": "NVIDIA GeForce RTX 3070 Ti Laptop GPU"
+  },
+  "results": [
+    {
+      "backend": "cpu",
+      "status": "passed",
+      "raw_seconds": [
+        0.2969029999999293,
+        0.29253219999998237,
+        0.31530580000003283
+      ],
+      "median_seconds": 0.2969029999999293,
+      "min_seconds": 0.29253219999998237,
+      "max_seconds": 0.31530580000003283,
+      "examples_per_second": 101043.10161907136,
+      "max_parameter_error": 1.1102230246251565e-16,
+      "final_batch_loss": 0.5964929954566615
+    },
+    {
+      "backend": "cuda",
+      "status": "passed",
+      "raw_seconds": [
+        0.7679383000000826,
+        0.9059654999999793,
+        0.8081372000000329
+      ],
+      "median_seconds": 0.8081372000000329,
+      "min_seconds": 0.7679383000000826,
+      "max_seconds": 0.9059654999999793,
+      "examples_per_second": 37122.40941265763,
+      "max_parameter_error": 1.1102230246251565e-16,
+      "final_batch_loss": 0.5964929954566619
+    },
+    {
+      "backend": "torch",
+      "status": "passed",
+      "raw_seconds": [
+        0.025573600000029728,
+        0.027972299999987627,
+        0.029723699999976816
+      ],
+      "median_seconds": 0.027972299999987627,
+      "min_seconds": 0.025573600000029728,
+      "max_seconds": 0.029723699999976816,
+      "examples_per_second": 1072489.5700394057,
+      "max_parameter_error": 0.0,
+      "final_batch_loss": 0.5964929954566619
+    }
+  ]
+}

@@ -4,6 +4,38 @@ MiniTorch is a PyTorch-style deep learning framework built from scratch in Pytho
 
 The goal is not to outperform PyTorch. The goal is to understand what PyTorch is doing underneath: how computation graphs are built, how gradients flow backward, how tensor shape/stride metadata works, and how backend kernels make tensor programs fast.
 
+## Engineering extension (November 2026)
+
+The runtime now includes direct matrix-multiply dense layers, adaptive serial/parallel
+CPU kernels, persistent CUDA storage, metadata-only tensor views, and a `no_grad()`
+inference context. CUDA matrix multiplication and long reductions have new numerical
+regression tests. A matched float64 training benchmark checks every final parameter
+against PyTorch before reporting timings.
+
+On the local 10k-point XOR / three-epoch / float64 benchmark (median of three
+measured runs after warmup):
+
+| Backend | Original engine | Optimized engine | Improvement |
+| --- | ---: | ---: | ---: |
+| MiniTorch CPU | 49.136 s | 0.297 s | 165.5× |
+| MiniTorch CUDA | 30.019 s | 0.808 s | 37.1× |
+| PyTorch CPU reference | 0.024 s | 0.028 s | Measured in each session |
+
+Optimized MiniTorch CPU is about 10.6× slower than the PyTorch CPU reference on
+this workload. All final parameters agree within 1.11e-16 absolute error.
+These are workload-specific, fixed-step results; see the linked methodology and
+raw records before reusing the figures.
+
+The project is installable as a wheel and exposes `minitorch train`, `evaluate`, and
+`benchmark`. Training records include configuration, validation metrics, and portable
+NPZ checkpoints. See [runtime design](docs/ARCHITECTURE.md),
+[performance evidence](docs/PERFORMANCE.md), and [contributing](CONTRIBUTING.md).
+
+The original five course modules follow the [MiniTorch curriculum](https://minitorch.github.io/).
+The runtime optimization, validation harness, checkpoint format, CLI, and package CI
+are additional engineering work. The historical measurements below are retained for
+traceability and describe the earlier revision, not this updated runtime.
+
 ## Highlights
 
 - Built reverse-mode automatic differentiation from first principles.
@@ -14,7 +46,7 @@ The goal is not to outperform PyTorch. The goal is to understand what PyTorch is
 - Built neural-network primitives such as ReLU, sigmoid, softmax, log-softmax, pooling, and dropout.
 - Trained small MLPs on nonlinear classification datasets using the MiniTorch engine.
 
-## Performance Snapshot
+## Historical Performance Snapshot (June–September 2026)
 
 MiniTorch is an educational framework, not a PyTorch replacement. The benchmark
 story is still valuable because it shows measurable backend behavior across CPU,
@@ -22,8 +54,8 @@ CUDA, and PyTorch baselines.
 
 | Signal | Result | Why It Matters |
 | --- | --- | --- |
-| Matrix multiply scaling | MiniTorch CUDA is 10.86x faster than MiniTorch fast CPU at 512x512 | Shows GPU kernels win once the workload is large enough |
-| 10k-point MLP training | MiniTorch CUDA: 24.3043s vs MiniTorch fast CPU: 25.4046s | Shows larger batches/preloaded tensors can make CUDA viable |
+| Matrix multiply scaling | Historical timing ratio: 10.86x at 512x512 versus MiniTorch fast CPU | Speedup claim withheld: larger CUDA outputs fail sampled correctness checks; see validation audit below |
+| 10k-point MLP training | Recorded MiniTorch CUDA: 24.3043s vs MiniTorch fast CPU: 25.4046s | 4.33% lower median elapsed time for the specified 3-epoch benchmark; two measured runs |
 | PyTorch baseline | PyTorch CPU remains far faster: 0.0829s on the same 10k MLP workload | Keeps the comparison honest against production-grade kernels |
 
 ```mermaid
@@ -37,6 +69,8 @@ xychart-beta
 
 Detailed methodology, raw timings, timing breakdowns, and CUDA limitations are
 kept in the [Benchmarks](#benchmarks) section.
+The [2026-09-30 validation audit](#validation-audit-2026-09-30) records the numerical
+checks and limits on using these historical timings as resume claims.
 
 ## Why This Project Matters
 
@@ -91,13 +125,12 @@ docs/          # Supporting documentation/assets
 
 ## Installation
 
-Create a virtual environment and install the project in editable mode:
+Use Python 3.11 or 3.12 (the versions configured in CI). From the repository root:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
+python -m pip install -e ".[dev]"
 ```
 
 On Windows PowerShell:
@@ -105,14 +138,45 @@ On Windows PowerShell:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-pip install -e .
+python -m pip install -e ".[dev]"
 ```
 
-Optional demo dependencies:
+Runtime-only installation is `python -m pip install .`; development tools and
+PyTorch are optional. For benchmarks, add the benchmark extra. For CUDA, an NVIDIA
+GPU and compatible CUDA driver/toolkit are required; CPU usage does not require them.
 
 ```bash
-pip install -r requirements.extra.txt
+python -m pip install -e ".[benchmark]"
+python -m pip install -e ".[cuda]"
+python -m pip install -e ".[demo]"
+```
+
+`requirements.txt` preserves the older course environment; package dependencies
+and optional extras are declared in `pyproject.toml`.
+
+## Train, save, and evaluate
+
+```bash
+minitorch train --dataset xor --points 1000 --hidden 16 --epochs 100 --checkpoint artifacts/xor.npz --report artifacts/xor-training.json
+minitorch evaluate artifacts/xor.npz --points 1000
+minitorch benchmark --backends cpu torch --output artifacts/benchmark.json
+```
+
+Use `python -m minitorch` if the console command is not on your PATH. Add
+`--backend cuda` to training/evaluation or `--backends cpu cuda torch` to the
+benchmark to use CUDA. The default training, validation, and test seeds are
+1337, 1338, and 1339. Every example is evaluated, including a partial final batch.
+Checkpoints contain weights and JSON metadata; they do not use pickle.
+
+The benchmark matches initialization, data, batch order, float64 precision,
+SGD, loss, and CPU thread counts. It excludes compilation/warmup and validates
+the result of every run. See [methodology and raw records](docs/PERFORMANCE.md).
+
+To build distributable artifacts:
+
+```bash
+python -m build
+python -m pip install dist/minitorch-0.6.0-py3-none-any.whl
 ```
 
 ## Running Tests
@@ -133,6 +197,13 @@ pytest tests/test_conv.py
 ```
 
 The tests cover gradient correctness, scalar/tensor operations, broadcasting, tensor indexing, modules, neural-network utilities, and convolution behavior.
+
+The November 2026 local verification passed 252 tests with four existing expected
+failures; a separate CPU/CUDA run passed 163 backend/reference tests on the actual
+GPU. The installed wheel passed training, checkpoint evaluation, and benchmark
+smoke checks. See [verification details](docs/PERFORMANCE.md#local-verification).
+GitHub Actions is configured for Windows/Linux CPU and package checks; a remote
+CI run is still needed after pushing the change.
 
 CUDA backend tests are opt-in so the default suite works on machines without a reliable CUDA context:
 
@@ -169,7 +240,9 @@ python examples/mnist_cnn_demo.py
 
 ## Benchmarks
 
-MiniTorch includes both correctness-oriented and performance-oriented validation.
+For new measurements, use `minitorch benchmark` and the
+[current performance report](docs/PERFORMANCE.md). The remainder of this section
+is the historical benchmark record and audit for revision `836e9e2`.
 
 Benchmark claims should be tied to the standard methodology in
 [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md). The local benchmark record
@@ -208,9 +281,8 @@ MiniTorch CUDA narrows the gap but still does not beat MiniTorch fast CPU:
 | --- | ---: | ---: | ---: |
 | xor | 3.2728s | 6.3295s | 0.0171s |
 
-With benchmark-only preloaded batches and evaluation disabled during timing, a larger
-10,000-point XOR workload gives the CUDA backend enough work to slightly beat
-MiniTorch fast CPU:
+With benchmark-only preloaded batches and evaluation disabled during timing, the
+recorded 10,000-point XOR run has a slightly lower elapsed time on MiniTorch CUDA:
 
 | Dataset | Config | MiniTorch fast CPU | MiniTorch CUDA | PyTorch CPU |
 | --- | --- | ---: | ---: | ---: |
@@ -222,7 +294,8 @@ forward/optimizer overhead. A full-batch CUDA run at `batch_size=10000` currentl
 fails with an assertion, so the safe claim is limited to the validated 1,000-item
 batches above.
 
-Matrix multiplication scaling shows the workload-size effect more clearly:
+Historical matrix multiplication timings are preserved below. The ratios are
+elapsed-time ratios, not validated speedups; see the subsequent correctness audit.
 
 | Matrix Size | MiniTorch fast CPU | MiniTorch CUDA | CUDA vs MiniTorch CPU |
 | ---: | ---: | ---: | ---: |
@@ -232,10 +305,122 @@ Matrix multiplication scaling shows the workload-size effect more clearly:
 | 256 | 0.021037s | 0.008230s | 2.56x |
 | 512 | 0.292770s | 0.026949s | 10.86x |
 
-CUDA loses on small matrices where launch overhead dominates, then overtakes
-MiniTorch fast CPU once the matrix is large enough to amortize that overhead.
-PyTorch CPU remains much faster overall because it relies on mature native
-linear algebra kernels.
+The historical CUDA times become lower than MiniTorch fast CPU at larger sizes,
+but the numerical failures below prevent using that observation as a claim of
+faster correct matrix multiplication. The recorded PyTorch CPU baseline is faster
+than both MiniTorch backends.
+
+### Validation audit (2026-09-30)
+
+Reviewed revision: `836e9e2b26905b8765a4a75c4852d15defac8b45`. This audit adds
+evidence; it does not change the framework or rerun the historical timing suite.
+
+The resume values match the saved JSON records:
+
+| Measurement | Exact recorded median | Resume rounding / interpretation |
+| --- | ---: | --- |
+| 512x512 MiniTorch fast CPU matmul | 0.292770299998665s | 292.77ms |
+| 512x512 MiniTorch CUDA matmul | 0.026948700000502868s | 26.95ms; CPU/CUDA ratio = 10.863986x, rounded to 10.86x |
+| 10k-point XOR MLP, MiniTorch fast CPU | 25.404598350001834s | 25.40s |
+| 10k-point XOR MLP, MiniTorch CUDA | 24.304328700000042s | 24.30s; 4.330986% lower time, or 1.04527x |
+
+Sources: [matmul raw results](benchmarks/results/local_i9_12900h_rtx3070ti_matmul_scaling_2026_06_04.json)
+and [MLP raw results](benchmarks/results/local_i9_12900h_rtx3070ti_mlp_10k_preloaded_xor_2026_06_04.json).
+The matmul record uses five measured runs after one warmup. The MLP record uses two
+measured runs after one warmup, XOR, 10,000 points, hidden size 64, three epochs,
+batch size 1,000, preloaded batches, and evaluation disabled. These are local
+measurements on an i9-12900H / RTX 3070 Ti Laptop GPU. The 10.86x denominator is
+MiniTorch fast CPU, not PyTorch. The files were recorded in June 2026, after the
+proposed September 2024-February 2025 project date range.
+
+Fresh verification results:
+
+| Check | Observed result | Scope |
+| --- | --- | --- |
+| `.venv/Scripts/python.exe -m pytest -q` | 224 passed, 4 xfailed in 104.61s | Default suite; CUDA is opt-in. Two pytest cache permission warnings. |
+| CUDA runtime probe | Healthy; result 2.0 | Actual device transfer and kernel launch on RTX 3070 Ti Laptop GPU |
+| CUDA `test_mul_practice4`, `test_mul_practice5`, `test_mul_practice6` | 3 passed, 114 deselected in 7.41s | Existing 33x33 and rectangular/batched cases; nine warnings |
+
+The default suite used pytest 8.3.2, Hypothesis 6.54.0, NumPy 2.0.0, and Numba
+0.60.0. CUDA checks used the dedicated `minitorch-cuda` environment; its versions,
+timestamp, and every checked output are saved in the
+[sampled CUDA correctness record](benchmarks/results/resume_audit_cuda_samples_2026_09_30.json).
+The broader CUDA test invocation was interrupted during this review, so no full
+CUDA-suite pass count is claimed here.
+
+Independent numerical checks used the benchmark's exact deterministic matrix
+formula, `A[r,c] = B[r,c] = ((r*131+c*17)%97)/97.0`. Expected values were computed
+with Python dot products. For each size `n`, rows and columns came from the unique
+sorted set `{0, 1, min(31,n-1), min(32,n-1), n//2, n-1}`. The absolute error
+tolerance was 0.01, matching the existing tensor test comparison threshold.
+
+| Matrix size | Sampled entries | Entries exceeding tolerance | Maximum absolute error |
+| ---: | ---: | ---: | ---: |
+| 32 | 16 | 0 | 1.78e-15 |
+| 64 | 25 | 0 | 3.55e-15 |
+| 128 | 36 | 3 | 0.551812 |
+| 256 | 36 | 15 | 0.677224 |
+| 512 | 36 | 17 | 0.936975 |
+
+**Do not use the 10.86x figure as a validated resume speedup until CUDA matmul
+correctness is repaired and the benchmark is rerun.** Passing sampled entries at
+smaller sizes does not establish correctness for every entry or workload. The
+current CUDA/tensor source is unchanged from the historical matmul benchmark
+commit `253640d2b7b411fb9b41e973cf818726d751bf27`. The tile loop in
+[`cuda_ops.py`](minitorch/cuda_ops.py) synchronizes after loading shared memory but
+has no barrier between finishing the dot products and overwriting the next tile;
+this is a suspected race requiring investigation, not a confirmed repair.
+
+Two additional measurement limits matter. Numba diagnostics serialize the row
+and column loops in [`fast_ops.py`](minitorch/fast_ops.py), leaving only the batch
+loop parallel; a single square matrix has one batch. Also, observed CUDA inputs
+and outputs are host NumPy arrays and Numba reports host/device copy overhead.
+Despite the historical record's label, the timed `left @ right` path is not a
+transfer-free, pure-kernel measurement. The benchmark discards its output without
+checking numerical correctness.
+
+The MLP timing is a separate historical result: its linear layers use broadcasted
+multiplication and reduction rather than the tiled matmul kernel. The matmul
+failure does not by itself invalidate the recorded MLP elapsed times. Describe
+the 25.40s to 24.30s result as this specific three-epoch timing experiment, not
+time to convergence, equal final accuracy, or a general GPU training speedup.
+
+The implementation supports stronger scope wording than "five modules": scalar
+and tensor autodiff, shape/stride-aware storage, broadcasting-aware gradients,
+CPU/CUDA tensor kernels, differentiable 1D/2D convolution, pooling, dropout, SGD,
+and pytest/Hypothesis finite-difference checks. The five modules are course
+milestones. Avoid a full-MNIST accuracy claim from the archived `16/16` logs: the
+demo evaluates one 16-example batch, and its dropout condition uses `self.mode`
+while the module API sets `self.training`.
+
+### Possible reasons for the PyTorch performance gap
+
+Code inspection identifies the following likely contributors. Their individual
+runtime contributions have not been isolated with controlled experiments.
+
+| Difference | Evidence and likely effect |
+| --- | --- |
+| Linear-layer implementation | MiniTorch's benchmark uses broadcasted multiplication followed by reduction; PyTorch uses `x @ weight`. For batch size 1,000 and a 64-to-64 hidden layer, MiniTorch materializes 4,096,000 float64 products (32.768 MB) before reduction. PyTorch's matrix multiplication avoids this full product tensor. |
+| Arithmetic precision | MiniTorch stores float64; the PyTorch MLP uses float32. MiniTorch therefore needs twice the storage per value. This mismatch applies to the MLP comparison; the separate matmul benchmark explicitly uses float64 for PyTorch too. |
+| Native CPU kernels | The installed `torch 2.12.0+cpu` build reports Intel oneAPI MKL, OpenMP, AVX2, and 14 intra-op threads. These provide optimized native math facilities; MiniTorch implements general-purpose indexing and reductions itself. The current thread count was checked during the audit and was not recorded in the original timing files. |
+| GPU transfer and synchronization overhead | MiniTorch's tensor/view paths can copy data between host and device. The trainer explicitly synchronizes after forward, backward, and optimizer phases and launches separate kernels for elementary operations. Preloading batches does not eliminate these internal costs. |
+| Autodiff and allocation overhead | MiniTorch traverses the graph in Python and creates many tensor objects and temporary buffers. `Tensor.requires_grad_(False)` currently still assigns a history, so intended non-gradient inputs also participate in graph tracking. These are additional candidate costs, not quantified explanations of the entire gap. |
+| CPU matmul parallelism | For the standalone matmul benchmark, Numba diagnostics show only the batch loop remains parallel. A single matrix supplies one batch; the row and column loops are serialized. This does not explain the benchmark MLP directly, because that trainer uses multiply/reduce linear layers. |
+
+The relevant implementations are
+[`run_fast_tensor.py`](benchmarks/run_fast_tensor.py),
+[`run_torch.py`](benchmarks/run_torch.py), and
+[`tensor.py`](minitorch/tensor.py).
+PyTorch's [performance tuning guide](https://docs.pytorch.org/tutorials/recipes/recipes/tuning_guide)
+also discusses kernel-launch, memory-traffic, and synchronization costs.
+This benchmark uses eager PyTorch CPU; it does not use `torch.compile`, cuBLAS,
+cuDNN, or PyTorch CUDA. Those features should not be credited for these results.
+
+A controlled comparison would match dtype, linear-layer formulation, gradient
+requirements, initialization, learning rate, and thread settings, then measure
+the effects of device residency and synchronization separately. The current
+measurements establish an implementation-specific runtime gap, not equal time
+to convergence or an isolated measure of hardware capability.
 
 Run backend diagnostics:
 

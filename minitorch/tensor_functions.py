@@ -10,7 +10,7 @@ import numpy as np
 import minitorch
 
 from minitorch import operators
-from minitorch.autodiff import Context
+from minitorch.autodiff import Context, is_grad_enabled
 from minitorch.tensor_ops import SimpleBackend, TensorBackend
 
 if TYPE_CHECKING:
@@ -48,6 +48,7 @@ class Function:
             raw_vals.append(v.detach())
 
         # Create the context.
+        need_grad = need_grad and is_grad_enabled()
         ctx = Context(not need_grad)
 
         # Call forward with the variables.
@@ -328,9 +329,7 @@ def zeros(shape: UserShape, backend: TensorBackend = SimpleBackend) -> Tensor:
         new tensor
 
     """
-    return minitorch.Tensor.make(
-        [0.0] * int(operators.prod(shape)), shape, backend=backend
-    )
+    return minitorch.Tensor.make(np.zeros(int(operators.prod(shape))), shape, backend=backend)
 
 
 def rand(
